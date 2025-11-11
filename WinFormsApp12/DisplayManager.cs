@@ -7,13 +7,15 @@
     {
         private readonly TextBox display;
         private readonly Label history;
+        private readonly ListBox historyList;
         private bool shouldClearOnNextInput = false;
         private string currentExpression = "";
 
-        public DisplayManager(TextBox display, Label history)
+        public DisplayManager(TextBox display, Label history, ListBox historyList)
         {
             this.display = display;
             this.history = history;
+            this.historyList = historyList;
         }
 
         public void AppendNumber(string number)
@@ -41,8 +43,14 @@
 
         public void ShowEqualsResult(int leftValue, string operatorSymbol, int rightValue, int result)
         {
+            string calculation = $"{leftValue} {operatorSymbol} {rightValue} = {result}";
             history.Text = $"{leftValue} {operatorSymbol} {rightValue} =";
             display.Text = result.ToString();
+
+            // Add to history list
+            historyList.Items.Add(calculation);
+            historyList.TopIndex = historyList.Items.Count - 1; // Auto-scroll to bottom
+
             currentExpression = "";
             shouldClearOnNextInput = true;
         }
@@ -61,6 +69,11 @@
             history.Text = "";
             currentExpression = "";
             shouldClearOnNextInput = false;
+        }
+
+        public void ClearHistory()
+        {
+            historyList.Items.Clear();
         }
     }
 }

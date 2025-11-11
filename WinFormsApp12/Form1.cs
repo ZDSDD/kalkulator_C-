@@ -6,13 +6,13 @@ namespace WinFormsApp12
         private DisplayManager display;
         private TextBox textBox1;
         private Label label1;
+        private ListBox historyListBox;
 
         public Form1()
         {
             InitializeComponent();
 
             calculator = new Calculator();
-            display = new DisplayManager(textBox1, label1);
 
             SetupScalableLayout();
             display.Clear();
@@ -23,19 +23,32 @@ namespace WinFormsApp12
             // Clear any existing controls except our display
             Controls.Clear();
 
-            // Main container
-            TableLayoutPanel mainLayout = new TableLayoutPanel
+            // Main horizontal split: calculator on left, history on right
+            TableLayoutPanel mainContainer = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount = 3,
-                ColumnCount = 1,
+                ColumnCount = 2,
+                RowCount = 1,
                 Padding = new Padding(10)
             };
 
+            // Left side (calculator) takes 70%, right side (history) takes 30%
+            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
+            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+            mainContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            // Calculator panel (left side)
+            TableLayoutPanel calculatorLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 3,
+                ColumnCount = 1
+            };
+
             // Row sizes: history label, display textbox, buttons grid
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             // History label
             label1 = new Label
@@ -54,17 +67,46 @@ namespace WinFormsApp12
                 ReadOnly = true
             };
 
-            // Update display manager with new controls
-            display = new DisplayManager(textBox1, label1);
+            // History panel (right side)
+            Panel historyPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(5)
+            };
+
+            Label historyTitle = new Label
+            {
+                Text = "History",
+                Dock = DockStyle.Top,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Height = 30,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            historyListBox = new ListBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 10),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            historyPanel.Controls.Add(historyListBox);
+            historyPanel.Controls.Add(historyTitle);
+
+            // Create display manager with all controls including history list
+            display = new DisplayManager(textBox1, label1, historyListBox);
 
             // Button grid
             TableLayoutPanel buttonGrid = CreateButtonGrid();
 
-            mainLayout.Controls.Add(label1, 0, 0);
-            mainLayout.Controls.Add(textBox1, 0, 1);
-            mainLayout.Controls.Add(buttonGrid, 0, 2);
+            calculatorLayout.Controls.Add(label1, 0, 0);
+            calculatorLayout.Controls.Add(textBox1, 0, 1);
+            calculatorLayout.Controls.Add(buttonGrid, 0, 2);
 
-            Controls.Add(mainLayout);
+            mainContainer.Controls.Add(calculatorLayout, 0, 0);
+            mainContainer.Controls.Add(historyPanel, 1, 0);
+
+            Controls.Add(mainContainer);
         }
 
         private TableLayoutPanel CreateButtonGrid()
@@ -156,6 +198,7 @@ namespace WinFormsApp12
         {
             calculator.Reset();
             display.Clear();
+            display.ClearHistory();
         }
 
         private void buttonEquals_Click(object sender, EventArgs e)
