@@ -8,6 +8,7 @@
         private readonly TextBox display;
         private readonly Label history;
         private bool shouldClearOnNextInput = false;
+        private string currentExpression = "";
 
         public DisplayManager(TextBox display, Label history)
         {
@@ -25,14 +26,24 @@
             display.Text += number;
         }
 
-        public void AppendToHistory(string text)
+        public void ShowOperator(string operatorSymbol, int leftValue)
         {
-            history.Text += text;
+            currentExpression = $"{leftValue} {operatorSymbol} ";
+            history.Text = currentExpression;
+            shouldClearOnNextInput = true;
         }
 
         public void ShowResult(int result)
         {
             display.Text = result.ToString();
+            shouldClearOnNextInput = true;
+        }
+
+        public void ShowEqualsResult(int leftValue, string operatorSymbol, int rightValue, int result)
+        {
+            history.Text = $"{leftValue} {operatorSymbol} {rightValue} =";
+            display.Text = result.ToString();
+            currentExpression = "";
             shouldClearOnNextInput = true;
         }
 
@@ -46,8 +57,9 @@
 
         public void Clear()
         {
-            display.Text = "";
+            display.Text = "0";
             history.Text = "";
+            currentExpression = "";
             shouldClearOnNextInput = false;
         }
     }

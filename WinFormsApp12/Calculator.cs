@@ -7,8 +7,11 @@
     {
         private int result = 0;
         private string currentOperator = "";
+        private int leftOperand = 0;
 
         public int Result => result;
+        public string CurrentOperator => currentOperator;
+        public int LeftOperand => leftOperand;
 
         public void SetValue(int value)
         {
@@ -37,14 +40,22 @@
                     break;
             }
 
-            // Store the new operator for next time
+            // Store values for display
+            leftOperand = result;
             currentOperator = operatorSymbol;
+        }
+
+        public int CalculateFinal(int rightValue)
+        {
+            Calculate(rightValue, "");
+            return result;
         }
 
         public void Reset()
         {
             result = 0;
             currentOperator = "";
+            leftOperand = 0;
         }
     }
 }
