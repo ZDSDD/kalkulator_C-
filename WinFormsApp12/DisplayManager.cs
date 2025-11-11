@@ -8,8 +8,9 @@
         private readonly TextBox display;
         private readonly Label history;
         private readonly ListBox historyList;
-        private bool shouldClearOnNextInput = false;
+        private bool shouldClearOnNextInput = true;
         private string currentExpression = "";
+        private int ZeroCounter = 0;
 
         public DisplayManager(TextBox display, Label history, ListBox historyList)
         {
@@ -22,7 +23,21 @@
         {
             if (shouldClearOnNextInput)
             {
-                display.Text = "";
+                if(number == "0")
+                {
+                    // Prevent leading zeros
+                    ZeroCounter++;
+                    if (ZeroCounter > 10)
+                    {
+                        this.display.Text = "Stop hitting 0s!";
+                    }
+                        return;
+                }
+                else
+                {
+                    ZeroCounter = 0;
+                }
+                    display.Text = "";
                 shouldClearOnNextInput = false;
             }
             display.Text += number;
@@ -68,7 +83,7 @@
             display.Text = "0";
             history.Text = "";
             currentExpression = "";
-            shouldClearOnNextInput = false;
+            shouldClearOnNextInput = true;
         }
 
         public void ClearHistory()
