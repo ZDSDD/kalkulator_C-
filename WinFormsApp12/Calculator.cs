@@ -1,5 +1,13 @@
 ﻿namespace WinFormsApp12
 {
+
+    public enum SpecialOperatorsSimple
+    {
+        SQUARE,
+        SQRT,
+        ONEDIVX,
+        PERCENTAGE,
+    }
     /// <summary>
     /// Handles calculator math operations
     /// </summary>
@@ -16,6 +24,37 @@
         public void SetValue(double value)
         {
             result = value;
+        }
+        
+        public void CalculateSpecial(SpecialOperatorsSimple op)
+        {
+            switch (op)
+            {
+                case SpecialOperatorsSimple.SQUARE:
+                    result = result * result;
+                    break;
+                case SpecialOperatorsSimple.SQRT:
+                    result = Math.Sqrt(result);
+                    break;
+                case SpecialOperatorsSimple.ONEDIVX:
+                    if (result != 0)
+                    {
+                        result = 1 / result;
+                    }
+                    else
+                    {
+                        throw new DivideByZeroException("Cannot divide by zero.");
+                    }
+                    break;
+                case SpecialOperatorsSimple.PERCENTAGE:
+                    result = result / 100;
+                    break;
+            }
+
+            // Update left operand to reflect the value used for display after a special op
+            leftOperand = result;
+            // Clear current operator because a special op is immediate
+            currentOperator = "";
         }
 
         public void Calculate(double value, string operatorSymbol)
@@ -39,7 +78,7 @@
                     }
                     else
                     {
-                        result = 0; // Reset or show error
+                        throw new DivideByZeroException("Cannot divide by zero.");
                     }
                     break;
                 case "":

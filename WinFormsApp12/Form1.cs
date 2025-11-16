@@ -1,4 +1,4 @@
-namespace WinFormsApp12
+﻿namespace WinFormsApp12
 {
     public partial class Form1 : Form
     {
@@ -119,42 +119,47 @@ namespace WinFormsApp12
             };
 
             // Equal sizing for all rows and columns
-            for (int i = 0; i < 5; i++)
-                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 20));
+            for (int i = 0; i < 6; i++)
+                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100 / 6));
 
-            for (int i = 0; i < 4; i++)
-                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
+            for (int i = 0; i < 5; i++)
+                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20));
+
+            AddButton(grid, "1/x", 0, 0, buttonOneDivX_Click);
+            AddButton(grid, "x^2", 0, 1, buttonSquare_Click);
+            AddButton(grid, "sqrt", 0, 2, buttonSqrt_Click);
+            AddButton(grid, "%", 0, 3, buttonPercentage_Click);
 
             // Number buttons 7-9
-            AddButton(grid, "7", 0, 0, buttonNumeric_Click);
-            AddButton(grid, "8", 0, 1, buttonNumeric_Click);
-            AddButton(grid, "9", 0, 2, buttonNumeric_Click);
-            AddButton(grid, "/", 0, 3, buttonOperator_Click);
+            AddButton(grid, "7", 1, 0, buttonNumeric_Click);
+            AddButton(grid, "8", 1, 1, buttonNumeric_Click);
+            AddButton(grid, "9", 1, 2, buttonNumeric_Click);
+            AddButton(grid, "/", 1, 3, buttonOperator_Click);
 
             // Number buttons 4-6
-            AddButton(grid, "4", 1, 0, buttonNumeric_Click);
-            AddButton(grid, "5", 1, 1, buttonNumeric_Click);
-            AddButton(grid, "6", 1, 2, buttonNumeric_Click);
-            AddButton(grid, "*", 1, 3, buttonOperator_Click);
+            AddButton(grid, "4", 2, 0, buttonNumeric_Click);
+            AddButton(grid, "5", 2, 1, buttonNumeric_Click);
+            AddButton(grid, "6", 2, 2, buttonNumeric_Click);
+            AddButton(grid, "*", 2, 3, buttonOperator_Click);
 
             // Number buttons 1-3
-            AddButton(grid, "1", 2, 0, buttonNumeric_Click);
-            AddButton(grid, "2", 2, 1, buttonNumeric_Click);
-            AddButton(grid, "3", 2, 2, buttonNumeric_Click);
-            AddButton(grid, "-", 2, 3, buttonOperator_Click);
+            AddButton(grid, "1", 3, 0, buttonNumeric_Click);
+            AddButton(grid, "2", 3, 1, buttonNumeric_Click);
+            AddButton(grid, "3", 3, 2, buttonNumeric_Click);
+            AddButton(grid, "-", 3, 3, buttonOperator_Click);
 
             // Bottom row
-            AddButton(grid, "+/-", 3, 0, buttonSign_Click);
-            AddButton(grid, "0", 3, 1, buttonNumeric_Click);
-            AddButton(grid, ".", 3, 2, buttonDecimal_Click);
-            AddButton(grid, "+", 3, 3, buttonOperator_Click);
+            AddButton(grid, "+/-", 4, 0, buttonSign_Click);
+            AddButton(grid, "0", 4, 1, buttonNumeric_Click);
+            AddButton(grid, ".", 4, 2, buttonDecimal_Click);
+            AddButton(grid, "+", 4, 3, buttonOperator_Click);
 
             // Clear button
-            AddButton(grid, "C", 4, 0, buttonClear_Click);
+            AddButton(grid, "C", 5, 0, buttonClear_Click);
 
             // Equals button (spans 3 columns)
             Button equalsBtn = CreateButton("=", buttonEquals_Click);
-            grid.Controls.Add(equalsBtn, 1, 4);
+            grid.Controls.Add(equalsBtn, 1, 5);
             grid.SetColumnSpan(equalsBtn, 3);
 
             return grid;
@@ -195,12 +200,53 @@ namespace WinFormsApp12
             display.AppendDecimal();
         }
 
+        private void buttonPercentage_Click(object sender, EventArgs e)
+        {
+            // Pass current displayed value into calculator before special op
+            double current = display.GetCurrentValue();
+            calculator.SetValue(current);
+            calculator.CalculateSpecial(SpecialOperatorsSimple.PERCENTAGE);
+            string operatorSymbol = "%";
+            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
+            display.ShowResult(calculator.Result);
+        }
+
+        private void buttonSqrt_Click(object sender, EventArgs e)
+        {
+            double current = display.GetCurrentValue();
+            calculator.SetValue(current);
+            calculator.CalculateSpecial(SpecialOperatorsSimple.SQRT);
+            string operatorSymbol = "√";
+            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
+            display.ShowResult(calculator.Result);
+        }
+
+        private void buttonSquare_Click(object sender, EventArgs e)
+        {
+            double current = display.GetCurrentValue();
+            calculator.SetValue(current);
+            calculator.CalculateSpecial(SpecialOperatorsSimple.SQUARE);
+            string operatorSymbol = "sqr";
+            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
+            display.ShowResult(calculator.Result);
+        }
+
         private void buttonOperator_Click(object sender, EventArgs e)
         {
             string operatorSymbol = (sender as Button)?.Text ?? "";
 
             double currentValue = display.GetCurrentValue();
             calculator.Calculate(currentValue, operatorSymbol);
+
+            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
+            display.ShowResult(calculator.Result);
+        }
+        private void buttonOneDivX_Click(object sender, EventArgs e)
+        {
+            double current = display.GetCurrentValue();
+            calculator.SetValue(current);
+            calculator.CalculateSpecial(SpecialOperatorsSimple.ONEDIVX);
+            string operatorSymbol = "1/x";
 
             display.ShowOperator(operatorSymbol, calculator.LeftOperand);
             display.ShowResult(calculator.Result);
