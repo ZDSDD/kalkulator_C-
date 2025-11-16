@@ -9,7 +9,6 @@
         private readonly Label history;
         private readonly ListBox historyList;
         private bool shouldClearOnNextInput = true;
-        private string currentExpression = "";
 
         public DisplayManager(TextBox display, Label history, ListBox historyList)
         {
@@ -18,13 +17,25 @@
             this.historyList = historyList;
         }
 
-        public void AppendNumber(string number)
+        public void ShowError(string message)
+        {
+            display.Text = message;
+            history.Text = ""; // Clear pending operations
+            shouldClearOnNextInput = true; // Ready for new input
+        }
+
+        private void PrepareForInput()
         {
             if (shouldClearOnNextInput)
             {
                 display.Text = "0";
                 shouldClearOnNextInput = false;
             }
+        }
+
+        public void AppendNumber(string number)
+        {
+            PrepareForInput(); // Replaces duplicated code
 
             if (display.Text == "0")
             {
@@ -39,20 +50,47 @@
 
         public void AppendDecimal()
         {
+            // Use culture-specific decimal separator
+            string sep = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+
+            // If starting fresh, handle sign preservation and add leading zero with decimal
             if (shouldClearOnNextInput)
             {
-                display.Text = "0";
+                // Preserve a leading negative sign if the display currently contains it
+                if (!string.IsNullOrEmpty(display.Text) && display.Text.StartsWith("-"))
+                {
+                    display.Text = "-0" + sep;
+                }
+                else
+                {
+                    display.Text = "0" + sep;
+                }
+
                 shouldClearOnNextInput = false;
+                return;
             }
 
-            if (!display.Text.Contains("."))
+            // If there's only a sign (e.g. user toggled sign), start with -0<sep>
+            if (display.Text == "-")
             {
-                display.Text += ".";
+                display.Text = "-0" + sep;
+                return;
+            }
+
+            // Append decimal separator if not already present
+            if (!display.Text.Contains(sep))
+            {
+                display.Text += sep;
             }
         }
 
         public void ToggleSign()
         {
+            if (shouldClearOnNextInput)
+            {
+                PrepareForInput();
+            }
+
             if (display.Text == "0") return;
 
             if (display.Text.StartsWith("-"))
@@ -67,8 +105,7 @@
 
         public void ShowOperator(string operatorSymbol, double leftValue)
         {
-            currentExpression = $"{leftValue} {operatorSymbol} ";
-            history.Text = currentExpression;
+            history.Text = $"{leftValue} {operatorSymbol}";
             shouldClearOnNextInput = true;
         }
 
@@ -84,27 +121,41 @@
             history.Text = $"{leftValue} {operatorSymbol} {rightValue} =";
             display.Text = result.ToString();
 
-            // Add to history list
             historyList.Items.Add(calculation);
-            historyList.TopIndex = historyList.Items.Count - 1; // Auto-scroll to bottom
+            historyList.TopIndex = historyList.Items.Count -1;
 
-            currentExpression = "";
             shouldClearOnNextInput = true;
         }
 
         public double GetCurrentValue()
         {
-            if (string.IsNullOrEmpty(display.Text))
-                return 0;
+            // Normalize possible decimal separators so parsing succeeds regardless of whether text contains '.' or ',':
+            string text = display.Text ?? string.Empty;
+            var nfi = System.Globalization.CultureInfo.CurrentCulture.NumberFormat;
+            string sep = nfi.NumberDecimalSeparator;
 
-            return double.TryParse(display.Text, out double value) ? value : 0;
+            if (sep == ",")
+            {
+                // Replace any '.' with ',':
+                text = text.Replace('.', ',');
+            }
+            else
+            {
+                // Replace any ',' with '.':
+                text = text.Replace(',', '.');
+            }
+
+            if (double.TryParse(text, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.CurrentCulture, out double value))
+            {
+                return value;
+            }
+            return 0;
         }
 
         public void Clear()
         {
             display.Text = "0";
             history.Text = "";
-            currentExpression = "";
             shouldClearOnNextInput = true;
         }
 

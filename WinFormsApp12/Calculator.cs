@@ -1,13 +1,6 @@
 ﻿namespace WinFormsApp12
 {
 
-    public enum SpecialOperatorsSimple
-    {
-        SQUARE,
-        SQRT,
-        ONEDIVX,
-        PERCENTAGE,
-    }
     /// <summary>
     /// Handles calculator math operations
     /// </summary>
@@ -21,45 +14,37 @@
         public string CurrentOperator => currentOperator;
         public double LeftOperand => leftOperand;
 
-        public void SetValue(double value)
-        {
-            result = value;
-        }
-        
-        public void CalculateSpecial(SpecialOperatorsSimple op)
-        {
-            switch (op)
-            {
-                case SpecialOperatorsSimple.SQUARE:
-                    result = result * result;
-                    break;
-                case SpecialOperatorsSimple.SQRT:
-                    result = Math.Sqrt(result);
-                    break;
-                case SpecialOperatorsSimple.ONEDIVX:
-                    if (result != 0)
-                    {
-                        result = 1 / result;
-                    }
-                    else
-                    {
-                        throw new DivideByZeroException("Cannot divide by zero.");
-                    }
-                    break;
-                case SpecialOperatorsSimple.PERCENTAGE:
-                    result = result / 100;
-                    break;
-            }
 
-            // Update left operand to reflect the value used for display after a special op
-            leftOperand = result;
-            // Clear current operator because a special op is immediate
-            currentOperator = "";
+        public static double CalculateSquare(double value)
+        {
+            return value * value;
+        }
+
+        public static double CalculateSqrt(double value)
+        {
+            if (value < 0)
+            {
+                throw new ArgumentException("Invalid input"); // Sqrt of negative
+            }
+            return Math.Sqrt(value);
+        }
+
+        public static double CalculateOneDivX(double value)
+        {
+            if (value == 0)
+            {
+                throw new DivideByZeroException("Cannot divide by zero.");
+            }
+            return 1 / value;
+        }
+
+        public static double CalculatePercentage(double value)
+        {
+            return value / 100;
         }
 
         public void Calculate(double value, string operatorSymbol)
         {
-            // Do the previous operation
             switch (currentOperator)
             {
                 case "+":
@@ -86,7 +71,6 @@
                     break;
             }
 
-            // Store values for display
             leftOperand = result;
             currentOperator = operatorSymbol;
         }

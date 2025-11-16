@@ -114,15 +114,15 @@
             TableLayoutPanel grid = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount = 5,
+                RowCount = 6,
                 ColumnCount = 4
             };
 
             // Equal sizing for all rows and columns
             for (int i = 0; i < 6; i++)
-                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100 / 6));
+                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / 6));
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
                 grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20));
 
             AddButton(grid, "1/x", 0, 0, buttonOneDivX_Click);
@@ -202,54 +202,74 @@
 
         private void buttonPercentage_Click(object sender, EventArgs e)
         {
-            // Pass current displayed value into calculator before special op
+
             double current = display.GetCurrentValue();
-            calculator.SetValue(current);
-            calculator.CalculateSpecial(SpecialOperatorsSimple.PERCENTAGE);
-            string operatorSymbol = "%";
-            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
-            display.ShowResult(calculator.Result);
+            double newValue = Calculator.CalculatePercentage(current);
+            display.ShowResult(newValue);
+
         }
 
         private void buttonSqrt_Click(object sender, EventArgs e)
         {
-            double current = display.GetCurrentValue();
-            calculator.SetValue(current);
-            calculator.CalculateSpecial(SpecialOperatorsSimple.SQRT);
-            string operatorSymbol = "√";
-            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
-            display.ShowResult(calculator.Result);
+            try
+            {
+                double current = display.GetCurrentValue();
+                double newValue = Calculator.CalculateSqrt(current);
+                display.ShowResult(newValue);
+            }
+            catch (ArgumentException ex)
+            {
+                display.ShowError(ex.Message);
+                calculator.Reset();
+            }
         }
 
         private void buttonSquare_Click(object sender, EventArgs e)
         {
-            double current = display.GetCurrentValue();
-            calculator.SetValue(current);
-            calculator.CalculateSpecial(SpecialOperatorsSimple.SQUARE);
-            string operatorSymbol = "sqr";
-            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
-            display.ShowResult(calculator.Result);
+            try
+            {
+                double current = display.GetCurrentValue();
+                double newValue = Calculator.CalculateSquare(current);
+                display.ShowResult(newValue);
+            }
+            catch (ArgumentException ex)
+            {
+                display.ShowError(ex.Message); // e.g., "Invalid input"
+                calculator.Reset();
+            }
         }
 
         private void buttonOperator_Click(object sender, EventArgs e)
         {
-            string operatorSymbol = (sender as Button)?.Text ?? "";
+            try
+            {
+                string operatorSymbol = (sender as Button)?.Text ?? "";
+                double currentValue = display.GetCurrentValue();
 
-            double currentValue = display.GetCurrentValue();
-            calculator.Calculate(currentValue, operatorSymbol);
+                calculator.Calculate(currentValue, operatorSymbol);
 
-            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
-            display.ShowResult(calculator.Result);
+                display.ShowOperator(operatorSymbol, calculator.LeftOperand);
+                display.ShowResult(calculator.Result);
+            }
+            catch (DivideByZeroException)
+            {
+                display.ShowError("Cannot divide by zero");
+                calculator.Reset();
+            }
         }
         private void buttonOneDivX_Click(object sender, EventArgs e)
         {
-            double current = display.GetCurrentValue();
-            calculator.SetValue(current);
-            calculator.CalculateSpecial(SpecialOperatorsSimple.ONEDIVX);
-            string operatorSymbol = "1/x";
-
-            display.ShowOperator(operatorSymbol, calculator.LeftOperand);
-            display.ShowResult(calculator.Result);
+            try
+            {
+                double current = display.GetCurrentValue();
+                double newValue = Calculator.CalculateOneDivX(current);
+                display.ShowResult(newValue);
+            }
+            catch (DivideByZeroException)
+            {
+                display.ShowError("Cannot divide by zero");
+                calculator.Reset();
+            }
         }
 
         private void buttonClear_Click(object sender, EventArgs e)
