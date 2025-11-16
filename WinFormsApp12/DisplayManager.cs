@@ -1,5 +1,21 @@
-﻿namespace WinFormsApp12
+﻿using System.Numerics;
+
+namespace WinFormsApp12
 {
+    public enum CalculatorMode
+    {
+        Standard,
+        Programmer
+    }
+
+    public enum NumberBase
+    {
+        Hexadecimal,
+        Decimal,
+        Octal,
+        Binary
+    }
+
     /// <summary>
     /// Manages what shows on the screen
     /// </summary>
@@ -9,7 +25,11 @@
         private readonly Label history;
         private readonly ListBox historyList;
         private bool shouldClearOnNextInput = true;
-
+        private NumberBase currentBase = NumberBase.Decimal;
+        public NumberBase CurrentBase
+        {
+            set { this.currentBase = value; }
+        }
         public DisplayManager(TextBox display, Label history, ListBox historyList)
         {
             this.display = display;
@@ -32,10 +52,78 @@
                 shouldClearOnNextInput = false;
             }
         }
+        private string ConvertToString(long value, NumberBase nBase)
+        {
+            switch (nBase)
+            {
+                case NumberBase.Hexadecimal:
+                    return Convert.ToString(value, 16).ToUpper();
+                case NumberBase.Octal:
+                    return Convert.ToString(value, 8);
+                case NumberBase.Binary:
+                    return Convert.ToString(value, 2);
+                case NumberBase.Decimal:
+                default:
+                    return value.ToString();
+            }
+        }
 
+        public void ShowIntegerResult(long result)
+        {
+            display.Text = ConvertToString(result, currentBase);
+            shouldClearOnNextInput = true;
+        }
+        public void ShowEqualsIntegerResult(long leftValue, string operatorSymbol, long rightValue, long result)
+        {
+            // Format all parts of the calculation in the current base
+            string leftStr = ConvertToString(leftValue, currentBase);
+            string rightStr = ConvertToString(rightValue, currentBase);
+            string resultStr = ConvertToString(result, currentBase);
+
+            string calculation = $"{leftStr} {operatorSymbol} {rightStr} = {resultStr}";
+            history.Text = $"{leftStr} {operatorSymbol} {rightStr} =";
+            display.Text = resultStr;
+
+            historyList.Items.Add(calculation);
+            historyList.TopIndex = historyList.Items.Count - 1;
+
+            shouldClearOnNextInput = true;
+        }
+
+        public long GetCurrentInteger()
+        {
+            string text = display.Text ?? "0";
+            if (string.IsNullOrEmpty(text)) return 0;
+
+            try
+            {
+                // Parse the string using the correct base
+                switch (currentBase)
+                {
+                    case NumberBase.Hexadecimal:
+                        return Convert.ToInt64(text, 16);
+                    case NumberBase.Octal:
+                        return Convert.ToInt64(text, 8);
+                    case NumberBase.Binary:
+                        return Convert.ToInt64(text, 2);
+                    case NumberBase.Decimal:
+                    default:
+                        return Convert.ToInt64(text, 10);
+                }
+            }
+            catch (Exception)
+            {
+                // Handle invalid format (e.g., "FF" in Decimal mode)
+                return 0;
+            }
+        }
         public void AppendNumber(string number)
         {
-            PrepareForInput(); // Replaces duplicated code
+            // TODO: You can add base-validation here
+            // e.g., if (currentBase == NumberBase.Binary && number != "0" && number != "1") return;
+            // e.g., if (currentBase == NumberBase.Octal && int.Parse(number) > 7) return;
+
+            PrepareForInput();  
 
             if (display.Text == "0")
             {
