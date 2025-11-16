@@ -46,38 +46,42 @@ namespace WinFormsApp12
             TableLayoutPanel mainContainer = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount =2,
-                RowCount =1,
+                ColumnCount = 2,
+                RowCount = 1,
                 Padding = new Padding(10)
             };
 
-            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,70));
-            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,30));
-            mainContainer.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
+            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+            mainContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             TableLayoutPanel calculatorLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount =4,
-                ColumnCount =1
+                RowCount = 4,
+                ColumnCount = 1
             };
 
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Absolute,40));
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Absolute,50));
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Absolute,40));
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+            // REFINEMENT: Changed from Absolute to Percent/AutoSize
+            // This allows the display to scale with the form, and the
+            // button grid to occupy the majority of the space.
+            // The AutoSize row fits the programmer toolbar perfectly.
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 10)); // label1
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 15)); // textBox1
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));    // topButtonsPanel
+            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 75)); // buttonGrid
 
             label1 = new Label
             {
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleRight,
-                Font = new Font("Segoe UI",10)
+                Font = new Font("Segoe UI", 10)
             };
 
             textBox1 = new TextBox
             {
                 Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI",16),
+                Font = new Font("Segoe UI", 16, FontStyle.Bold), // Made bold for emphasis
                 TextAlign = HorizontalAlignment.Right,
                 ReadOnly = true
             };
@@ -87,13 +91,16 @@ namespace WinFormsApp12
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 AutoSize = true,
-                MinimumSize = new Size(0, 45)
+                // REFINEMENT: Set a minimum height, but AutoSize will handle expansion
+                MinimumSize = new Size(0, 35)
             };
 
             btnMode = CreateButton("Standard", buttonMode_Click);
-            btnMode.Font = new Font(btnMode.Font.FontFamily,10, FontStyle.Regular);
-            btnMode.Width =100; // Ensure the button has a visible width
-            btnMode.Height =40; // Ensure the button has a visible height
+
+            // REFINEMENT: Standardized toolbar button font and size
+            btnMode.Font = new Font("Segoe UI", 9, FontStyle.Regular);
+            btnMode.Width = 100;
+            btnMode.Height = 35;
             topButtonsPanel.Controls.Add(btnMode);
 
             Button btnHex = CreateButton("HEX", buttonBase_Click);
@@ -105,54 +112,51 @@ namespace WinFormsApp12
 
             foreach (var b in baseButtons)
             {
-                b.Font = new Font(b.Font.FontFamily,9, FontStyle.Regular);
+                // REFINEMENT: Standardized toolbar button font and size
+                b.Font = new Font("Segoe UI", 9, FontStyle.Regular);
                 b.Width = 60;
-                b.Height = 40;
+                b.Height = 35;
                 topButtonsPanel.Controls.Add(b);
                 programmerOnlyButtons.Add(b);
             }
 
-            // store the default backcolor for toggling highlight later
-            baseButtonDefaultBackColor = baseButtons.Count >0 ? baseButtons[0].BackColor : SystemColors.Control;
+            baseButtonDefaultBackColor = baseButtons.Count > 0 ? baseButtons[0].BackColor : SystemColors.Control;
 
             string[] progOps = new[] { "AND", "OR", "XOR", "Lsh", "Rsh" };
             foreach (var op in progOps)
             {
                 Button b = CreateButton(op, buttonProgrammerOperator_Click);
-                b.Font = new Font(b.Font.FontFamily,9, FontStyle.Regular);
+                // REFINEMENT: Standardized toolbar button font and size
+                b.Font = new Font("Segoe UI", 9, FontStyle.Regular);
                 b.Width = 60;
-                b.Height = 40;
+                b.Height = 35;
                 topButtonsPanel.Controls.Add(b);
                 programmerOnlyButtons.Add(b);
             }
 
             Button btnNot = CreateButton("NOT", buttonProgrammerUnary_Click);
-            btnNot.Font = new Font(btnNot.Font.FontFamily,9, FontStyle.Regular);
+            // REFINEMENT: Standardized toolbar button font and size
+            btnNot.Font = new Font("Segoe UI", 9, FontStyle.Regular);
             btnNot.Width = 60;
-            btnNot.Height = 40;
+            btnNot.Height = 35;
             topButtonsPanel.Controls.Add(btnNot);
             programmerOnlyButtons.Add(btnNot);
 
-            FlowLayoutPanel hexPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                AutoSize = true
-            };
+            // REFINEMENT: Removed the separate, empty 'hexPanel'.
+            // The A-F buttons were already being added to 'topButtonsPanel' correctly.
+            // The 'hexPanel' itself was being added as an empty control.
 
             foreach (var ch in new[] { "A", "B", "C", "D", "E", "F" })
             {
                 Button hb = CreateButton(ch, buttonNumeric_Click);
-                hb.Font = new Font(hb.Font.FontFamily,10, FontStyle.Regular);
-                hb.Width = 40;
-                hb.Height = 40;
+                // REFINEMENT: Standardized toolbar button font and size
+                hb.Font = new Font("Segoe UI", 9, FontStyle.Regular);
+                hb.Width = 35; // Made smaller
+                hb.Height = 35;
                 topButtonsPanel.Controls.Add(hb);
                 programmerOnlyButtons.Add(hb);
                 hexButtons.Add(hb);
             }
-
-            // Add A-F hex panel into the top controls so it's visible
-            topButtonsPanel.Controls.Add(hexPanel);
 
             Panel historyPanel = new Panel
             {
@@ -164,15 +168,15 @@ namespace WinFormsApp12
             {
                 Text = "History",
                 Dock = DockStyle.Top,
-                Font = new Font("Segoe UI",12, FontStyle.Bold),
-                Height =30,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Height = 30,
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
             historyListBox = new ListBox
             {
                 Dock = DockStyle.Fill,
-                Font = new Font("Consolas",10),
+                Font = new Font("Consolas", 10),
                 BorderStyle = BorderStyle.FixedSingle
             };
 
@@ -183,14 +187,17 @@ namespace WinFormsApp12
 
             TableLayoutPanel buttonGrid = CreateButtonGrid();
 
-            calculatorLayout.Controls.Add(label1,0,0);
-            calculatorLayout.Controls.Add(textBox1,0,1);
-            calculatorLayout.Controls.Add(topButtonsPanel,0,2);
-            calculatorLayout.Controls.Add(buttonGrid,0,3);
+            calculatorLayout.Controls.Add(label1, 0, 0);
+            calculatorLayout.Controls.Add(textBox1, 0, 1);
+            calculatorLayout.Controls.Add(topButtonsPanel, 0, 2);
+            calculatorLayout.Controls.Add(buttonGrid, 0, 3);
 
-            mainContainer.Controls.Add(calculatorLayout,0,0);
-            mainContainer.Controls.Add(historyPanel,1,0);
+            mainContainer.Controls.Add(calculatorLayout, 0, 0);
+            mainContainer.Controls.Add(historyPanel, 1, 0);
             Controls.Add(mainContainer);
+
+            // Set a reasonable minimum size for the form
+            this.MinimumSize = new Size(600, 700);
         }
 
         private TableLayoutPanel CreateButtonGrid()
@@ -202,11 +209,13 @@ namespace WinFormsApp12
                 ColumnCount = 4
             };
 
-            for (int i = 0; i < 6; i++)
-                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / 6));
+            // REFINEMENT: Use 100f / RowCount for clarity
+            for (int i = 0; i < grid.RowCount; i++)
+                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / grid.RowCount));
 
-            for (int i = 0; i < 4; i++)
-                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20));
+            // REFINEMENT: Use 100f / ColumnCount for clarity
+            for (int i = 0; i < grid.ColumnCount; i++)
+                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / grid.ColumnCount));
 
             Button btnOneDiv = AddButton(grid, "1/x", 0, 0, buttonOneDivX_Click);
             Button btnSquare = AddButton(grid, "x^2", 0, 1, buttonSquare_Click);
@@ -240,10 +249,13 @@ namespace WinFormsApp12
             Button equalsBtn = CreateButton("=", buttonEquals_Click);
             grid.Controls.Add(equalsBtn, 1, 5);
             grid.SetColumnSpan(equalsBtn, 3);
+            equalsBtn.Dock = DockStyle.Fill; // Ensure equals button fills its spanned cells
 
             numericButtons.AddRange(new[] { btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9 });
 
-            standardOnlyButtons.AddRange(new[] { btnSign, btnDecimal, btnClear });
+            // REFINEMENT: Removed 'btnClear' from this list.
+            // The Clear button should be visible in both modes.
+            standardOnlyButtons.AddRange(new[] { btnSign, btnDecimal });
 
             return grid;
         }
@@ -261,15 +273,22 @@ namespace WinFormsApp12
             Button btn = new Button
             {
                 Text = text,
-                //Dock = DockStyle.Fill,
                 Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                UseVisualStyleBackColor = true
+                UseVisualStyleBackColor = true,
+                // REFINEMENT: Set FlatStyle for a more modern look
+                FlatStyle = FlatStyle.Flat
             };
+            // REFINEMENT: Add some basic hover/click effects
+            btn.FlatAppearance.BorderColor = Color.DarkGray;
+            btn.FlatAppearance.MouseOverBackColor = Color.LightGray;
+            btn.FlatAppearance.MouseDownBackColor = Color.DarkGray;
+
             btn.Click += onClick;
             return btn;
         }
         #endregion
 
+        // ... [Rest of your event handlers, no changes needed there] ...
         #region Standard calculations
         private void buttonPercentage_Click(object sender, EventArgs e)
         {
@@ -328,6 +347,9 @@ namespace WinFormsApp12
         {
             if (currentMode == CalculatorMode.Programmer)
             {
+                // Note: This currently only routes operators defined in the prog list
+                // (AND, OR, etc.). You may want to add logic for +, -, *, /
+                // in programmer mode if desired.
                 buttonProgrammerOperator_Click(sender, e);
                 return;
             }
@@ -451,6 +473,18 @@ namespace WinFormsApp12
                 if (operatorSymbol == "OR") operatorSymbol = "|";
                 if (operatorSymbol == "XOR") operatorSymbol = "^";
 
+                // REFINEMENT: Added standard operators for programmer mode
+                // This assumes your ProgrammerCalculator can handle them.
+                if (new[] { "+", "-", "*", "/" }.Contains(operatorSymbol))
+                {
+                    // Use the symbol directly
+                }
+                else if (!new[] { "<<", ">>", "&", "|", "^" }.Contains(operatorSymbol))
+                {
+                    // If it's not a recognized prog operator, do nothing
+                    return;
+                }
+
                 long currentValue = display.GetCurrentInteger();
                 progCalculator.Calculate(currentValue, operatorSymbol);
                 display.ShowIntegerResult(progCalculator.Result);
@@ -499,7 +533,7 @@ namespace WinFormsApp12
             if (currentMode == CalculatorMode.Standard)
             {
                 foreach (var b in numericButtons) b.Enabled = true;
-                foreach (var b in hexButtons) b.Enabled = true;
+                foreach (var b in hexButtons) b.Enabled = false; // A-F buttons disabled in Standard
                 return;
             }
 
@@ -528,9 +562,11 @@ namespace WinFormsApp12
                 }
             }
 
+            // REFINEMENT: Find the decimal button by text to disable it in prog mode
             foreach (var btn in standardOnlyButtons)
             {
-                if (btn.Text == ".") btn.Enabled = isDec;
+                if (btn.Text == ".") btn.Enabled = false; // No decimals in prog mode
+                if (btn.Text == "+/-") btn.Enabled = false; // No sign toggle in prog mode
             }
         }
 
@@ -539,6 +575,9 @@ namespace WinFormsApp12
             foreach (var b in baseButtons)
             {
                 b.BackColor = baseButtonDefaultBackColor;
+                // REFINEMENT: Ensure base buttons use flat style
+                b.FlatStyle = FlatStyle.Flat;
+                b.FlatAppearance.BorderColor = Color.DarkGray;
             }
 
             if (currentMode != CalculatorMode.Programmer) return;
@@ -556,7 +595,9 @@ namespace WinFormsApp12
             {
                 if (b.Text == selected)
                 {
-                    b.BackColor = Color.LightBlue;
+                    // REFINEMENT: Use a more noticeable highlight
+                    b.BackColor = Color.CornflowerBlue;
+                    b.FlatAppearance.BorderColor = Color.Black;
                     break;
                 }
             }
