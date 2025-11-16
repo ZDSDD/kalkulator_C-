@@ -24,7 +24,7 @@
         {
             if (value < 0)
             {
-                throw new ArgumentException("Invalid input"); // Sqrt of negative
+                throw new ArgumentException("Invalid input");
             }
             return Math.Sqrt(value);
         }

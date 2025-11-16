@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Globalization;
+using System.Windows.Forms;
 
 namespace WinFormsApp12
 {
@@ -25,11 +27,13 @@ namespace WinFormsApp12
         private readonly Label history;
         private readonly ListBox historyList;
         private bool shouldClearOnNextInput = true;
-        private NumberBase currentBase = NumberBase.Decimal;
-        public NumberBase CurrentBase
-        {
-            set { this.currentBase = value; }
-        }
+
+        private const int MaxInputLength = 20;
+
+        public NumberBase CurrentBase { get; set; } = NumberBase.Decimal;
+
+        public CalculatorMode CurrentMode { get; set; } = CalculatorMode.Standard;
+
         public DisplayManager(TextBox display, Label history, ListBox historyList)
         {
             this.display = display;
@@ -40,8 +44,8 @@ namespace WinFormsApp12
         public void ShowError(string message)
         {
             display.Text = message;
-            history.Text = ""; // Clear pending operations
-            shouldClearOnNextInput = true; // Ready for new input
+            history.Text = string.Empty;
+            shouldClearOnNextInput = true;
         }
 
         private void PrepareForInput()
@@ -52,6 +56,7 @@ namespace WinFormsApp12
                 shouldClearOnNextInput = false;
             }
         }
+
         private string ConvertToString(long value, NumberBase nBase)
         {
             switch (nBase)
@@ -70,15 +75,15 @@ namespace WinFormsApp12
 
         public void ShowIntegerResult(long result)
         {
-            display.Text = ConvertToString(result, currentBase);
+            display.Text = ConvertToString(result, CurrentBase);
             shouldClearOnNextInput = true;
         }
+
         public void ShowEqualsIntegerResult(long leftValue, string operatorSymbol, long rightValue, long result)
         {
-            // Format all parts of the calculation in the current base
-            string leftStr = ConvertToString(leftValue, currentBase);
-            string rightStr = ConvertToString(rightValue, currentBase);
-            string resultStr = ConvertToString(result, currentBase);
+            string leftStr = ConvertToString(leftValue, CurrentBase);
+            string rightStr = ConvertToString(rightValue, CurrentBase);
+            string resultStr = ConvertToString(result, CurrentBase);
 
             string calculation = $"{leftStr} {operatorSymbol} {rightStr} = {resultStr}";
             history.Text = $"{leftStr} {operatorSymbol} {rightStr} =";
@@ -97,8 +102,7 @@ namespace WinFormsApp12
 
             try
             {
-                // Parse the string using the correct base
-                switch (currentBase)
+                switch (CurrentBase)
                 {
                     case NumberBase.Hexadecimal:
                         return Convert.ToInt64(text, 16);
@@ -111,19 +115,27 @@ namespace WinFormsApp12
                         return Convert.ToInt64(text, 10);
                 }
             }
-            catch (Exception)
+            catch (FormatException)
             {
-                // Handle invalid format (e.g., "FF" in Decimal mode)
                 return 0;
             }
+            catch (OverflowException)
+            {
+                return long.MaxValue;
+            }
         }
+
         public void AppendNumber(string number)
         {
-            // TODO: You can add base-validation here
-            // e.g., if (currentBase == NumberBase.Binary && number != "0" && number != "1") return;
-            // e.g., if (currentBase == NumberBase.Octal && int.Parse(number) > 7) return;
+            if (CurrentMode == CalculatorMode.Programmer)
+            {
+                if (CurrentBase == NumberBase.Binary && (number != "0" && number != "1")) return;
+                if (CurrentBase == NumberBase.Octal && int.Parse(number) > 7) return;
+            }
 
-            PrepareForInput();  
+            PrepareForInput();
+
+            if (display.Text.Length >= MaxInputLength) return;
 
             if (display.Text == "0")
             {
@@ -138,13 +150,12 @@ namespace WinFormsApp12
 
         public void AppendDecimal()
         {
-            // Use culture-specific decimal separator
-            string sep = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            if (CurrentMode == CalculatorMode.Programmer) return;
 
-            // If starting fresh, handle sign preservation and add leading zero with decimal
+            string sep = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+
             if (shouldClearOnNextInput)
             {
-                // Preserve a leading negative sign if the display currently contains it
                 if (!string.IsNullOrEmpty(display.Text) && display.Text.StartsWith("-"))
                 {
                     display.Text = "-0" + sep;
@@ -158,14 +169,14 @@ namespace WinFormsApp12
                 return;
             }
 
-            // If there's only a sign (e.g. user toggled sign), start with -0<sep>
+            if (display.Text.Length >= MaxInputLength) return;
+
             if (display.Text == "-")
             {
                 display.Text = "-0" + sep;
                 return;
             }
 
-            // Append decimal separator if not already present
             if (!display.Text.Contains(sep))
             {
                 display.Text += sep;
@@ -174,6 +185,8 @@ namespace WinFormsApp12
 
         public void ToggleSign()
         {
+            if (CurrentMode == CalculatorMode.Programmer) return;
+
             if (shouldClearOnNextInput)
             {
                 PrepareForInput();
@@ -188,6 +201,26 @@ namespace WinFormsApp12
             else
             {
                 display.Text = "-" + display.Text;
+            }
+        }
+
+        public void Backspace()
+        {
+            if (shouldClearOnNextInput)
+            {
+                display.Text = "0";
+                shouldClearOnNextInput = false;
+                return;
+            }
+
+            if (display.Text.Length > 0)
+            {
+                display.Text = display.Text.Substring(0, display.Text.Length - 1);
+            }
+
+            if (string.IsNullOrEmpty(display.Text) || display.Text == "-")
+            {
+                display.Text = "0";
             }
         }
 
@@ -210,30 +243,16 @@ namespace WinFormsApp12
             display.Text = result.ToString();
 
             historyList.Items.Add(calculation);
-            historyList.TopIndex = historyList.Items.Count -1;
+            historyList.TopIndex = historyList.Items.Count - 1;
 
             shouldClearOnNextInput = true;
         }
 
         public double GetCurrentValue()
         {
-            // Normalize possible decimal separators so parsing succeeds regardless of whether text contains '.' or ',':
             string text = display.Text ?? string.Empty;
-            var nfi = System.Globalization.CultureInfo.CurrentCulture.NumberFormat;
-            string sep = nfi.NumberDecimalSeparator;
 
-            if (sep == ",")
-            {
-                // Replace any '.' with ',':
-                text = text.Replace('.', ',');
-            }
-            else
-            {
-                // Replace any ',' with '.':
-                text = text.Replace(',', '.');
-            }
-
-            if (double.TryParse(text, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.CurrentCulture, out double value))
+            if (double.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out double value))
             {
                 return value;
             }
@@ -243,7 +262,7 @@ namespace WinFormsApp12
         public void Clear()
         {
             display.Text = "0";
-            history.Text = "";
+            history.Text = string.Empty;
             shouldClearOnNextInput = true;
         }
 

@@ -1,93 +1,127 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WinFormsApp12
 {
     /// <summary>
-    /// Handles 64-bit integer, multi-base, and bitwise operations
+    /// Handles64-bit integer, multi-base, and bitwise operations
     /// </summary>
     public class ProgrammerCalculator
     {
-        private long result = 0;
+        private long result =0;
         private string currentOperator = "";
-        private long leftOperand = 0;
+        private long leftOperand =0;
+
+        private long lastRightOperand =0;
+        private string lastOperator = "";
+        private bool isNewChain = true;
 
         public long Result => result;
         public string CurrentOperator => currentOperator;
         public long LeftOperand => leftOperand;
 
-        // Handles unary (single-number) operations
         public long PerformUnaryOperation(string operatorSymbol, long value)
         {
             switch (operatorSymbol)
             {
-                case "~": // Bitwise NOT
+                case "~":
                     return ~value;
                 default:
                     return value;
             }
         }
 
-        // Handles binary (two-number) operations
-        public void Calculate(long value, string operatorSymbol)
+        private void PerformCalculation(long rightValue)
         {
             switch (currentOperator)
             {
                 case "+":
-                    result += value;
+                    result += rightValue;
                     break;
                 case "-":
-                    result -= value;
+                    result -= rightValue;
                     break;
                 case "*":
-                    result *= value;
+                    result *= rightValue;
                     break;
                 case "/":
-                    if (value == 0)
+                    if (rightValue ==0)
                     {
                         throw new DivideByZeroException("Cannot divide by zero.");
                     }
-                    result /= value; // Integer division
+                    result /= rightValue;
                     break;
-                case "&": // AND
-                    result &= value;
+                case "&":
+                    result &= rightValue;
                     break;
-                case "|": // OR
-                    result |= value;
+                case "|":
+                    result |= rightValue;
                     break;
-                case "^": // XOR
-                    result ^= value;
+                case "^":
+                    result ^= rightValue;
                     break;
-                case "<<": // Left Shift
-                    // Shift operators require the right-hand side to be an 'int'
-                    result <<= (int)value;
+                case "<<":
+                    result <<= (int)rightValue;
                     break;
-                case ">>": // Right Shift
-                    result >>= (int)value;
+                case ">>":
+                    result >>= (int)rightValue;
                     break;
-                case "": // No previous operator, this is the first number
-                    result = value;
+                case "":
+                    result = rightValue;
                     break;
             }
 
+            lastRightOperand = rightValue;
+            lastOperator = currentOperator;
             leftOperand = result;
+        }
+
+        public void SetOperator(string operatorSymbol, long currentValue)
+        {
+            if (!isNewChain)
+            {
+                PerformCalculation(currentValue);
+            }
+            else
+            {
+                result = currentValue;
+                leftOperand = currentValue;
+                isNewChain = false;
+            }
+
             currentOperator = operatorSymbol;
         }
 
         public long CalculateFinal(long rightValue)
         {
-            Calculate(rightValue, "");
+            if (isNewChain)
+            {
+                if (!string.IsNullOrEmpty(lastOperator))
+                {
+                    currentOperator = lastOperator;
+                    PerformCalculation(lastRightOperand);
+                }
+                else
+                {
+                    result = rightValue;
+                }
+            }
+            else
+            {
+                PerformCalculation(rightValue);
+                isNewChain = true;
+            }
+
             return result;
         }
 
         public void Reset()
         {
-            result = 0;
+            result =0;
             currentOperator = "";
-            leftOperand = 0;
+            leftOperand =0;
+            lastRightOperand =0;
+            lastOperator = "";
+            isNewChain = true;
         }
     }
 }
