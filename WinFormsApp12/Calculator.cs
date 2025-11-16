@@ -5,20 +5,20 @@
     /// </summary>
     public class Calculator
     {
-        private int result = 0;
+        private double result = 0;
         private string currentOperator = "";
-        private int leftOperand = 0;
+        private double leftOperand = 0;
 
-        public int Result => result;
+        public double Result => result;
         public string CurrentOperator => currentOperator;
-        public int LeftOperand => leftOperand;
+        public double LeftOperand => leftOperand;
 
-        public void SetValue(int value)
+        public void SetValue(double value)
         {
             result = value;
         }
 
-        public void Calculate(int value, string operatorSymbol)
+        public void Calculate(double value, string operatorSymbol)
         {
             // Do the previous operation
             switch (currentOperator)
@@ -33,7 +33,14 @@
                     result *= value;
                     break;
                 case "/":
-                    result = value != 0 ? result / value : 0;
+                    if (value != 0)
+                    {
+                        result /= value;
+                    }
+                    else
+                    {
+                        result = 0; // Reset or show error
+                    }
                     break;
                 case "":
                     result = value;
@@ -45,7 +52,7 @@
             currentOperator = operatorSymbol;
         }
 
-        public int CalculateFinal(int rightValue)
+        public double CalculateFinal(double rightValue)
         {
             Calculate(rightValue, "");
             return result;

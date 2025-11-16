@@ -144,7 +144,9 @@ namespace WinFormsApp12
             AddButton(grid, "-", 2, 3, buttonOperator_Click);
 
             // Bottom row
+            AddButton(grid, "+/-", 3, 0, buttonSign_Click);
             AddButton(grid, "0", 3, 1, buttonNumeric_Click);
+            AddButton(grid, ".", 3, 2, buttonDecimal_Click);
             AddButton(grid, "+", 3, 3, buttonOperator_Click);
 
             // Clear button
@@ -183,11 +185,21 @@ namespace WinFormsApp12
             display.AppendNumber(number);
         }
 
+        private void buttonSign_Click(object sender, EventArgs e)
+        {
+            display.ToggleSign();
+        }
+
+        private void buttonDecimal_Click(object sender, EventArgs e)
+        {
+            display.AppendDecimal();
+        }
+
         private void buttonOperator_Click(object sender, EventArgs e)
         {
             string operatorSymbol = (sender as Button)?.Text ?? "";
 
-            int currentValue = display.GetCurrentValue();
+            double currentValue = display.GetCurrentValue();
             calculator.Calculate(currentValue, operatorSymbol);
 
             display.ShowOperator(operatorSymbol, calculator.LeftOperand);
@@ -203,11 +215,11 @@ namespace WinFormsApp12
 
         private void buttonEquals_Click(object sender, EventArgs e)
         {
-            int rightValue = display.GetCurrentValue();
-            int leftValue = calculator.LeftOperand;
+            double rightValue = display.GetCurrentValue();
+            double leftValue = calculator.LeftOperand;
             string op = calculator.CurrentOperator;
 
-            int result = calculator.CalculateFinal(rightValue);
+            double result = calculator.CalculateFinal(rightValue);
             display.ShowEqualsResult(leftValue, op, rightValue, result);
         }
     }

@@ -10,7 +10,6 @@
         private readonly ListBox historyList;
         private bool shouldClearOnNextInput = true;
         private string currentExpression = "";
-        private int ZeroCounter = 0;
 
         public DisplayManager(TextBox display, Label history, ListBox historyList)
         {
@@ -23,40 +22,63 @@
         {
             if (shouldClearOnNextInput)
             {
-                if(number == "0")
-                {
-                    // Prevent leading zeros
-                    ZeroCounter++;
-                    if (ZeroCounter > 10)
-                    {
-                        this.display.Text = "Stop hitting 0s!";
-                    }
-                        return;
-                }
-                else
-                {
-                    ZeroCounter = 0;
-                }
-                    display.Text = "";
+                display.Text = "0";
                 shouldClearOnNextInput = false;
             }
-            display.Text += number;
+
+            if (display.Text == "0")
+            {
+                if (number == "0") return;
+                display.Text = number;
+            }
+            else
+            {
+                display.Text += number;
+            }
         }
 
-        public void ShowOperator(string operatorSymbol, int leftValue)
+        public void AppendDecimal()
+        {
+            if (shouldClearOnNextInput)
+            {
+                display.Text = "0";
+                shouldClearOnNextInput = false;
+            }
+
+            if (!display.Text.Contains("."))
+            {
+                display.Text += ".";
+            }
+        }
+
+        public void ToggleSign()
+        {
+            if (display.Text == "0") return;
+
+            if (display.Text.StartsWith("-"))
+            {
+                display.Text = display.Text.Substring(1);
+            }
+            else
+            {
+                display.Text = "-" + display.Text;
+            }
+        }
+
+        public void ShowOperator(string operatorSymbol, double leftValue)
         {
             currentExpression = $"{leftValue} {operatorSymbol} ";
             history.Text = currentExpression;
             shouldClearOnNextInput = true;
         }
 
-        public void ShowResult(int result)
+        public void ShowResult(double result)
         {
             display.Text = result.ToString();
             shouldClearOnNextInput = true;
         }
 
-        public void ShowEqualsResult(int leftValue, string operatorSymbol, int rightValue, int result)
+        public void ShowEqualsResult(double leftValue, string operatorSymbol, double rightValue, double result)
         {
             string calculation = $"{leftValue} {operatorSymbol} {rightValue} = {result}";
             history.Text = $"{leftValue} {operatorSymbol} {rightValue} =";
@@ -70,12 +92,12 @@
             shouldClearOnNextInput = true;
         }
 
-        public int GetCurrentValue()
+        public double GetCurrentValue()
         {
             if (string.IsNullOrEmpty(display.Text))
                 return 0;
 
-            return int.TryParse(display.Text, out int value) ? value : 0;
+            return double.TryParse(display.Text, out double value) ? value : 0;
         }
 
         public void Clear()
