@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace CalculatorApp
 {
@@ -15,6 +16,8 @@ namespace CalculatorApp
 
         public void AppendNumber(string number)
         {
+            if (number == "0" && _display.GetCurrentValue() == 0)
+                return;
             _display.AppendNumber(number);
         }
 
@@ -54,7 +57,15 @@ namespace CalculatorApp
                     "%" => Calculator.CalculatePercentage(value),
                     _ => value
                 };
-
+                string prepared_striog = op switch
+                {
+                    "1/x" => "1/(" + value + ")",
+                    "x^2" => "sqr(" + value + ")",
+                    "sqrt" => "√(" + value + ")",
+                    "%" => "(" + value + ")%",
+                    _ => value.ToString()
+                };
+                _display.ShowExactlyOnDisplay(prepared_striog+"=", prepared_striog, unary.ToString(CultureInfo.CurrentCulture));
                 _display.ShowResult(unary);
             }
             catch (DivideByZeroException)
@@ -78,7 +89,13 @@ namespace CalculatorApp
                 double right = _display.GetCurrentValue();
                 double left = _calc.LeftOperand;
                 string opSymbol = CurrentOperatorString();
-
+                if (opSymbol == "")
+                {
+                    // No operation to perform
+                    _display.ShowExactlyOnDisplay($"{right}=", right.ToString(CultureInfo.CurrentCulture), right.ToString(CultureInfo.CurrentCulture));
+                    _display.ShowResult(right);
+                    return;
+                }
                 double res = _calc.CalculateFinal(right);
 
                 _display.ShowEqualsResult(

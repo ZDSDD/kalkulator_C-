@@ -21,20 +21,12 @@ namespace CalculatorApp
 
         public void ApplyOperator(T currentValue, TOp op)
         {
-            if (hasPendingOperator)
+            if (!hasPendingOperator)
             {
-                // Complete the pending operation first
-                result = ApplyOperation(leftOperand, currentValue, currentOperator);
-                leftOperand = result;
-            }
-            else
-            {
-                // Start new calculation
                 result = currentValue;
                 leftOperand = currentValue;
                 hasPendingOperator = true;
             }
-
             currentOperator = op;
             lastOperator = op;
             lastRightOperand = currentValue;

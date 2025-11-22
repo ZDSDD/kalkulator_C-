@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace CalculatorApp
 {
@@ -78,7 +79,13 @@ namespace CalculatorApp
                 long right = _display.GetCurrentInteger();
                 long left = _calc.LeftOperand;
                 string opSymbol = GetOperatorSymbol(_calc.CurrentOperator);
-
+                if (opSymbol == "")
+                {
+                    // No operation to perform
+                    _display.ShowExactlyOnDisplay($"{right}=", right.ToString(CultureInfo.CurrentCulture), right.ToString(CultureInfo.CurrentCulture));
+                    _display.ShowResult(right);
+                    return;
+                }
                 long res = _calc.CalculateFinal(right);
 
                 _display.ShowEqualsIntegerResult(

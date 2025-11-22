@@ -13,14 +13,12 @@ namespace CalculatorApp
         // Simple data model for a history item
         public class HistoryItem
         {
-            public string Left { get; set; }
-            public string Op { get; set; }
-            public string Right { get; set; }
+            public string Calculation { get; set; }
             public string Result { get; set; }
 
             public override string ToString()
             {
-                return $"{Left} {Op} {Right} = {Result}";
+                return $"{Calculation} = {Result}";
             }
         }
 
@@ -29,19 +27,16 @@ namespace CalculatorApp
             _listBox = listBox;
         }
 
-        public void AddEntry(string left, string op, string right, string result)
+        public void AddEntry(string calcualtion, string result)
         {
             var item = new HistoryItem
             {
-                Left = left,
-                Op = op,
-                Right = right,
+                Calculation = calcualtion,
                 Result = result
             };
 
             _listBox.Items.Add(item);
 
-            // Auto-scroll to bottom
             _listBox.TopIndex = _listBox.Items.Count - 1;
         }
 

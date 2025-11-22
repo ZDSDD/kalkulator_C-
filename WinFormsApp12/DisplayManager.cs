@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
 namespace CalculatorApp
@@ -9,6 +10,7 @@ namespace CalculatorApp
         private readonly TextBox _display;
         private readonly Label _equationLabel;
         private readonly HistoryManager _historyManager; // Dependency for logging
+
 
         private bool _shouldClearOnNextInput = true;
         private const int MaxInputLength = 20;
@@ -57,6 +59,13 @@ namespace CalculatorApp
             _shouldClearOnNextInput = true;
         }
 
+        public void ShowExactlyOnDisplay(string exactString, string calculation, string result)
+        {
+            _equationLabel.Text = exactString;
+            _historyManager.AddEntry(calculation, result);
+            _shouldClearOnNextInput = true;
+        }
+
         public void ShowEqualsResult(double left, string op, double right, double result)
         {
             string leftStr = left.ToString(CultureInfo.CurrentCulture);
@@ -82,7 +91,7 @@ namespace CalculatorApp
             _equationLabel.Text = $"{left} {op} {right} =";
 
             // 2. Log to History
-            _historyManager.AddEntry(left, op, right, result);
+            _historyManager.AddEntry($"{left} {op} {right}", result);
 
             _shouldClearOnNextInput = true;
         }
