@@ -1,4 +1,4 @@
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     /// <summary>
     /// Represents supported number bases for the calculator.

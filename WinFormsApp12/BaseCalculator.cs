@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     public abstract class BaseCalculator<T, TOp>
     {
@@ -16,7 +16,7 @@ namespace WinFormsApp12
         public T Result => result;
         public TOp CurrentOperator => currentOperator;
         public T LeftOperand => leftOperand;
-
+        public T LastRightOperand => lastRightOperand;
         protected abstract T ApplyOperation(T left, T right, TOp op);
 
         public void ApplyOperator(T currentValue, TOp op)

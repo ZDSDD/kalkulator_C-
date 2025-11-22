@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     // Partial class allows us to split the code into logic (Form1.cs) and UI (Form1.Layout.cs)
     public partial class Form1

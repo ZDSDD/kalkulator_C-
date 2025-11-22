@@ -1,4 +1,4 @@
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     internal static class Program
     {

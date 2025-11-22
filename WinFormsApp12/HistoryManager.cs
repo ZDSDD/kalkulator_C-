@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     /// <summary>
     /// Responsible solely for managing the history log (ListBox)

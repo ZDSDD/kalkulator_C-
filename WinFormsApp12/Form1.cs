@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     public partial class Form1 : Form
     {

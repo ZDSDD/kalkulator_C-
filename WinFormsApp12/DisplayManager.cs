@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Forms;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     public class DisplayManager
     {

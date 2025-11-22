@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
 
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WinFormsApp12
+namespace CalculatorApp
 {
     public class ProgrammerStrategy : ICalculatorStrategy
     {
@@ -84,7 +84,7 @@ namespace WinFormsApp12
                 _display.ShowEqualsIntegerResult(
                     left,
                     opSymbol,
-                    right,
+                    _calc.LastRightOperand,
                     res
                 );
             }
