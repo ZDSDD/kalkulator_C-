@@ -1,494 +1,101 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace WinFormsApp12
 {
     public partial class Form1 : Form
     {
-        private Calculator calculator;
         private DisplayManager display;
-        private TextBox textBox1;
-        private Label label1;
-        private ListBox historyListBox;
-
-        private ProgrammerCalculator progCalculator;
-        private CalculatorMode currentMode = CalculatorMode.Standard;
-        private NumberBase currentBase = NumberBase.Decimal;
-
-        private List<Button> standardOnlyButtons = new List<Button>();
-        private List<Button> programmerOnlyButtons = new List<Button>();
-        private List<Button> hexButtons = new List<Button>();
-        private List<Button> numericButtons = new List<Button>();
-
-        private Button btnMode;
-        private List<Button> baseButtons = new List<Button>();
-        private Color baseButtonDefaultBackColor;
+        private HistoryManager historyManager;
+        private ICalculatorStrategy _currentStrategy;
+        private StandardStrategy _standardStrategy;
+        private ProgrammerStrategy _programmerStrategy;
 
         public Form1()
         {
             InitializeComponent();
-
-            calculator = new Calculator();
-            progCalculator = new ProgrammerCalculator();
             SetupScalableLayout();
-            display.Clear();
+            historyManager = new HistoryManager(historyListBox);
+            display = new DisplayManager(textBox1, label1, historyManager);
 
+            _standardStrategy = new StandardStrategy(new Calculator(), display);
+            _programmerStrategy = new ProgrammerStrategy(new ProgrammerCalculator(), display);
+
+            _currentStrategy = _standardStrategy;
             UpdateUIVisibility();
-        }
-
-        #region UI Setup
-        private void SetupScalableLayout()
-        {
-            Controls.Clear();
-
-            TableLayoutPanel mainContainer = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 1,
-                Padding = new Padding(10)
-            };
-
-            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
-            mainContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
-            mainContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            TableLayoutPanel calculatorLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                RowCount = 4,
-                ColumnCount = 1
-            };
-
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 10));
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 15));
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            calculatorLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 75));
-
-            label1 = new Label
-            {
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleRight,
-                Font = new Font("Segoe UI", 10)
-            };
-
-            textBox1 = new TextBox
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                TextAlign = HorizontalAlignment.Right,
-                ReadOnly = true
-            };
-
-            FlowLayoutPanel topButtonsPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                AutoSize = true,
-                MinimumSize = new Size(0, 35)
-            };
-
-            btnMode = CreateButton("Standard", buttonMode_Click);
-            btnMode.Font = new Font("Segoe UI", 9, FontStyle.Regular);
-            btnMode.Width = 100;
-            btnMode.Height = 35;
-            topButtonsPanel.Controls.Add(btnMode);
-
-            Button btnHex = CreateButton("HEX", buttonBase_Click);
-            Button btnDec = CreateButton("DEC", buttonBase_Click);
-            Button btnOct = CreateButton("OCT", buttonBase_Click);
-            Button btnBin = CreateButton("BIN", buttonBase_Click);
-
-            baseButtons.AddRange(new[] { btnHex, btnDec, btnOct, btnBin });
-
-            foreach (var b in baseButtons)
-            {
-                b.Font = new Font("Segoe UI", 9, FontStyle.Regular);
-                b.Width = 60;
-                b.Height = 35;
-                topButtonsPanel.Controls.Add(b);
-                programmerOnlyButtons.Add(b);
-            }
-
-            baseButtonDefaultBackColor = baseButtons.Count > 0 ? baseButtons[0].BackColor : SystemColors.Control;
-
-            string[] progOps = new[] { "AND", "OR", "XOR", "Lsh", "Rsh" };
-            foreach (var op in progOps)
-            {
-                Button b = CreateButton(op, buttonProgrammerOperator_Click);
-                b.Font = new Font("Segoe UI", 9, FontStyle.Regular);
-                b.Width = 60;
-                b.Height = 35;
-                topButtonsPanel.Controls.Add(b);
-                programmerOnlyButtons.Add(b);
-            }
-
-            Button btnNot = CreateButton("NOT", buttonProgrammerUnary_Click);
-            btnNot.Font = new Font("Segoe UI", 9, FontStyle.Regular);
-            btnNot.Width = 60;
-            btnNot.Height = 35;
-            topButtonsPanel.Controls.Add(btnNot);
-            programmerOnlyButtons.Add(btnNot);
-
-            foreach (var ch in new[] { "A", "B", "C", "D", "E", "F" })
-            {
-                Button hb = CreateButton(ch, buttonNumeric_Click);
-                hb.Font = new Font("Segoe UI", 9, FontStyle.Regular);
-                hb.Width = 35;
-                hb.Height = 35;
-                topButtonsPanel.Controls.Add(hb);
-                programmerOnlyButtons.Add(hb);
-                hexButtons.Add(hb);
-            }
-
-            Panel historyPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(5)
-            };
-
-            Label historyTitle = new Label
-            {
-                Text = "History",
-                Dock = DockStyle.Top,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Height = 30,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            historyListBox = new ListBox
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Consolas", 10),
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            historyPanel.Controls.Add(historyListBox);
-            historyPanel.Controls.Add(historyTitle);
-
-            display = new DisplayManager(textBox1, label1, historyListBox);
-
-            TableLayoutPanel buttonGrid = CreateButtonGrid();
-
-            calculatorLayout.Controls.Add(label1, 0, 0);
-            calculatorLayout.Controls.Add(textBox1, 0, 1);
-            calculatorLayout.Controls.Add(topButtonsPanel, 0, 2);
-            calculatorLayout.Controls.Add(buttonGrid, 0, 3);
-
-            mainContainer.Controls.Add(calculatorLayout, 0, 0);
-            mainContainer.Controls.Add(historyPanel, 1, 0);
-            Controls.Add(mainContainer);
-
-            this.MinimumSize = new Size(600, 700);
-        }
-
-        private TableLayoutPanel CreateButtonGrid()
-        {
-            TableLayoutPanel grid = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                RowCount = 6,
-                ColumnCount = 4
-            };
-
-            for (int i = 0; i < grid.RowCount; i++)
-                grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / grid.RowCount));
-
-            for (int i = 0; i < grid.ColumnCount; i++)
-                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / grid.ColumnCount));
-
-            Button btnOneDiv = AddButton(grid, "1/x", 0, 0, buttonOneDivX_Click);
-            Button btnSquare = AddButton(grid, "x^2", 0, 1, buttonSquare_Click);
-            Button btnSqrt = AddButton(grid, "sqrt", 0, 2, buttonSqrt_Click);
-            Button btnPercent = AddButton(grid, "%", 0, 3, buttonPercentage_Click);
-
-            standardOnlyButtons.AddRange(new[] { btnOneDiv, btnSquare, btnSqrt, btnPercent });
-
-            Button btn7 = AddButton(grid, "7", 1, 0, buttonNumeric_Click);
-            Button btn8 = AddButton(grid, "8", 1, 1, buttonNumeric_Click);
-            Button btn9 = AddButton(grid, "9", 1, 2, buttonNumeric_Click);
-            AddButton(grid, "/", 1, 3, buttonOperator_Click);
-
-            Button btn4 = AddButton(grid, "4", 2, 0, buttonNumeric_Click);
-            Button btn5 = AddButton(grid, "5", 2, 1, buttonNumeric_Click);
-            Button btn6 = AddButton(grid, "6", 2, 2, buttonNumeric_Click);
-            AddButton(grid, "*", 2, 3, buttonOperator_Click);
-
-            Button btn1 = AddButton(grid, "1", 3, 0, buttonNumeric_Click);
-            Button btn2 = AddButton(grid, "2", 3, 1, buttonNumeric_Click);
-            Button btn3 = AddButton(grid, "3", 3, 2, buttonNumeric_Click);
-            AddButton(grid, "-", 3, 3, buttonOperator_Click);
-
-            Button btnSign = AddButton(grid, "+/-", 4, 0, buttonSign_Click);
-            Button btn0 = AddButton(grid, "0", 4, 1, buttonNumeric_Click);
-            Button btnDecimal = AddButton(grid, ".", 4, 2, buttonDecimal_Click);
-            AddButton(grid, "+", 4, 3, buttonOperator_Click);
-
-            Button btnClear = AddButton(grid, "C", 5, 0, buttonClear_Click);
-
-            Button equalsBtn = CreateButton("=", buttonEquals_Click);
-            grid.Controls.Add(equalsBtn, 1, 5);
-            grid.SetColumnSpan(equalsBtn, 3);
-            equalsBtn.Dock = DockStyle.Fill;
-
-            numericButtons.AddRange(new[] { btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9 });
-
-            standardOnlyButtons.AddRange(new[] { btnSign, btnDecimal });
-
-            return grid;
-        }
-
-        private Button AddButton(TableLayoutPanel grid, string text, int row, int col, EventHandler onClick)
-        {
-            Button btn = CreateButton(text, onClick);
-            grid.Controls.Add(btn, col, row);
-            btn.Dock = DockStyle.Fill;
-            return btn;
-        }
-
-        private Button CreateButton(string text, EventHandler onClick)
-        {
-            Button btn = new Button
-            {
-                Text = text,
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                UseVisualStyleBackColor = true,
-                FlatStyle = FlatStyle.Flat
-            };
-            btn.FlatAppearance.BorderColor = Color.DarkGray;
-            btn.FlatAppearance.MouseOverBackColor = Color.LightGray;
-            btn.FlatAppearance.MouseDownBackColor = Color.DarkGray;
-
-            btn.Click += onClick;
-            return btn;
-        }
-        #endregion
-
-        private void buttonPercentage_Click(object sender, EventArgs e)
-        {
-            double current = display.GetCurrentValue();
-            double newValue = Calculator.CalculatePercentage(current);
-            display.ShowResult(newValue);
-        }
-
-        private void buttonSqrt_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                double current = display.GetCurrentValue();
-                double newValue = Calculator.CalculateSqrt(current);
-                display.ShowResult(newValue);
-            }
-            catch (ArgumentException ex)
-            {
-                display.ShowError(ex.Message);
-                calculator.Reset();
-            }
-        }
-
-        private void buttonSquare_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                double current = display.GetCurrentValue();
-                double newValue = Calculator.CalculateSquare(current);
-                display.ShowResult(newValue);
-            }
-            catch (ArgumentException ex)
-            {
-                display.ShowError(ex.Message);
-                calculator.Reset();
-            }
-        }
-
-        private void buttonOneDivX_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                double current = display.GetCurrentValue();
-                double newValue = Calculator.CalculateOneDivX(current);
-                display.ShowResult(newValue);
-            }
-            catch (DivideByZeroException)
-            {
-                display.ShowError("Cannot divide by zero");
-                calculator.Reset();
-            }
-        }
-
-        private void buttonOperator_Click(object sender, EventArgs e)
-        {
-            if (currentMode == CalculatorMode.Programmer)
-            {
-                buttonProgrammerOperator_Click(sender, e);
-                return;
-            }
-
-            try
-            {
-                string operatorSymbol = (sender as Button)?.Text ?? "";
-                double currentValue = display.GetCurrentValue();
-                calculator.Calculate(currentValue, operatorSymbol);
-                display.ShowOperator(operatorSymbol, calculator.LeftOperand);
-                display.ShowResult(calculator.Result);
-            }
-            catch (DivideByZeroException)
-            {
-                display.ShowError("Cannot divide by zero");
-                calculator.Reset();
-            }
         }
 
         private void buttonNumeric_Click(object sender, EventArgs e)
         {
             string number = (sender as Button)?.Text ?? "";
-            display.AppendNumber(number);
+            if (_currentStrategy.IsDigitAllowed(number))
+            {
+                _currentStrategy.AppendNumber(number);
+            }
         }
 
-        private void buttonSign_Click(object sender, EventArgs e)
+        private void buttonOperator_Click(object sender, EventArgs e)
         {
-            display.ToggleSign();
+            string op = (sender as Button)?.Text ?? "";
+            _currentStrategy.ApplyOperator(op);
         }
 
-        private void buttonDecimal_Click(object sender, EventArgs e)
+        private void buttonUnary_Click(object sender, EventArgs e)
         {
-            display.AppendDecimal();
-        }
-
-        private void buttonClear_Click(object sender, EventArgs e)
-        {
-            calculator.Reset();
-            progCalculator.Reset();
-            display.Clear();
-            display.ClearHistory();
+            string op = (sender as Button)?.Text ?? "";
+            _currentStrategy.ApplyUnary(op);
         }
 
         private void buttonEquals_Click(object sender, EventArgs e)
         {
-            if (currentMode == CalculatorMode.Standard)
-            {
-                double rightValue = display.GetCurrentValue();
-                double leftValue = calculator.LeftOperand;
-                string op = calculator.CurrentOperator;
-                double result = calculator.CalculateFinal(rightValue);
-                display.ShowEqualsResult(leftValue, op, rightValue, result);
-            }
-            else
-            {
-                long rightValue = display.GetCurrentInteger();
-                long leftValue = progCalculator.LeftOperand;
-                string op = progCalculator.CurrentOperator;
-                long result = progCalculator.CalculateFinal(rightValue);
-                display.ShowEqualsIntegerResult(leftValue, op, rightValue, result);
-            }
+            _currentStrategy.CalculateResult();
         }
 
-        private void buttonMode_Click(object sender, EventArgs e)
+        private void buttonClear_Click(object sender, EventArgs e)
         {
-            if (currentMode == CalculatorMode.Standard)
-            {
-                currentMode = CalculatorMode.Programmer;
-                currentBase = NumberBase.Decimal;
-            }
-            else
-            {
-                currentMode = CalculatorMode.Standard;
-                currentBase = NumberBase.Decimal;
-            }
-
-            calculator.Reset();
-            progCalculator.Reset();
-            display.Clear();
-            display.CurrentBase = currentBase;
-
-            UpdateUIVisibility();
+            _currentStrategy.Clear();
         }
+
+        private void buttonSign_Click(object sender, EventArgs e) => _currentStrategy.ToggleSign();
+
+        private void buttonDecimal_Click(object sender, EventArgs e) => _currentStrategy.AppendDecimal();
 
         private void buttonBase_Click(object sender, EventArgs e)
         {
-            if (currentMode == CalculatorMode.Standard) return;
-
             string baseText = (sender as Button)?.Text ?? "DEC";
-
-            long currentValue = display.GetCurrentInteger();
-
-            switch (baseText)
-            {
-                case "HEX": currentBase = NumberBase.Hexadecimal; break;
-                case "DEC": currentBase = NumberBase.Decimal; break;
-                case "OCT": currentBase = NumberBase.Octal; break;
-                case "BIN": currentBase = NumberBase.Binary; break;
-            }
-
-            display.CurrentBase = currentBase;
-            display.ShowIntegerResult(currentValue);
+            _currentStrategy.ChangeBase(baseText);
 
             UpdateNumericButtonEnabledState();
             HighlightSelectedBase();
         }
 
-        private void buttonProgrammerOperator_Click(object sender, EventArgs e)
+        private void buttonMode_Click(object sender, EventArgs e)
         {
-            if (currentMode == CalculatorMode.Standard) return;
-
-            try
+            if (_currentStrategy is StandardStrategy)
             {
-                string operatorSymbol = (sender as Button)?.Text ?? "";
-
-                if (operatorSymbol == "Lsh") operatorSymbol = "<<";
-                if (operatorSymbol == "Rsh") operatorSymbol = ">>";
-
-                if (operatorSymbol == "AND") operatorSymbol = "&";
-                if (operatorSymbol == "OR") operatorSymbol = "|";
-                if (operatorSymbol == "XOR") operatorSymbol = "^";
-
-                if (new[] { "+", "-", "*", "/" }.Contains(operatorSymbol))
-                {
-                }
-                else if (!new[] { "<<", ">>", "&", "|", "^" }.Contains(operatorSymbol))
-                {
-                    return;
-                }
-
-                long currentValue = display.GetCurrentInteger();
-                progCalculator.SetOperator(operatorSymbol, currentValue);
-                display.ShowIntegerResult(progCalculator.LeftOperand);
+                _currentStrategy = _programmerStrategy;
+                btnMode.Text = "Programmer";
             }
-            catch (DivideByZeroException)
+            else
             {
-                display.ShowError("Cannot divide by zero");
-                progCalculator.Reset();
+                _currentStrategy = _standardStrategy;
+                btnMode.Text = "Standard";
             }
+
+            _currentStrategy.Clear();
+            UpdateUIVisibility();
         }
 
-        private void buttonProgrammerUnary_Click(object sender, EventArgs e)
-        {
-            if (currentMode == CalculatorMode.Standard) return;
-
-            string op = (sender as Button)?.Text ?? "";
-            if (op == "NOT") op = "~";
-
-            long currentValue = display.GetCurrentInteger();
-            long result = progCalculator.PerformUnaryOperation(op, currentValue);
-            display.ShowIntegerResult(result);
-        }
 
         private void UpdateUIVisibility()
         {
-            bool isProgMode = (currentMode == CalculatorMode.Programmer);
-            btnMode.Visible = true;
-            foreach (var btn in standardOnlyButtons)
-            {
-                btn.Visible = !isProgMode;
-            }
-            foreach (var btn in programmerOnlyButtons)
-            {
-                btn.Visible = isProgMode;
-            }
+            bool isProg = _currentStrategy is ProgrammerStrategy;
 
-            btnMode.Text = isProgMode ? "Programmer" : "Standard";
+            foreach (var btn in standardOnlyButtons) btn.Visible = !isProg;
+            foreach (var btn in programmerOnlyButtons) btn.Visible = isProg;
 
             UpdateNumericButtonEnabledState();
             HighlightSelectedBase();
@@ -496,42 +103,13 @@ namespace WinFormsApp12
 
         private void UpdateNumericButtonEnabledState()
         {
-            if (currentMode == CalculatorMode.Standard)
-            {
-                foreach (var b in numericButtons) b.Enabled = true;
-                foreach (var b in hexButtons) b.Enabled = false;
-                return;
-            }
-
-            bool isHex = (currentBase == NumberBase.Hexadecimal);
-            bool isDec = (currentBase == NumberBase.Decimal);
-            bool isOct = (currentBase == NumberBase.Octal);
-            bool isBin = (currentBase == NumberBase.Binary);
-
-            foreach (var btn in hexButtons)
-            {
-                btn.Enabled = isHex;
-            }
-
             foreach (var btn in numericButtons)
             {
-                string txt = btn.Text;
-                if (int.TryParse(txt, out int digit))
-                {
-                    bool allowed = false;
-                    if (isHex) allowed = true;
-                    else if (isDec) allowed = digit >= 0 && digit <= 9;
-                    else if (isOct) allowed = digit >= 0 && digit <= 7;
-                    else if (isBin) allowed = (digit == 0 || digit == 1);
-
-                    btn.Enabled = allowed;
-                }
+                btn.Enabled = _currentStrategy.IsDigitAllowed(btn.Text);
             }
-
-            foreach (var btn in standardOnlyButtons)
+            foreach (var btn in hexButtons)
             {
-                if (btn.Text == ".") btn.Enabled = false;
-                if (btn.Text == "+/-") btn.Enabled = false;
+                btn.Enabled = _currentStrategy.IsDigitAllowed(btn.Text);
             }
         }
 
@@ -540,31 +118,20 @@ namespace WinFormsApp12
             foreach (var b in baseButtons)
             {
                 b.BackColor = baseButtonDefaultBackColor;
-                b.FlatStyle = FlatStyle.Flat;
                 b.FlatAppearance.BorderColor = Color.DarkGray;
             }
 
-            if (currentMode != CalculatorMode.Programmer) return;
-
-            string selected = currentBase switch
+            if (_currentStrategy is ProgrammerStrategy progStrat)
             {
-                NumberBase.Hexadecimal => "HEX",
-                NumberBase.Decimal => "DEC",
-                NumberBase.Octal => "OCT",
-                NumberBase.Binary => "BIN",
-                _ => "DEC"
-            };
-
-            foreach (var b in baseButtons)
-            {
-                if (b.Text == selected)
+                string currentBaseName = progStrat.CurrentBaseName;
+                var activeBtn = baseButtons.FirstOrDefault(b => b.Text == currentBaseName);
+                if (activeBtn != null)
                 {
-                    b.BackColor = Color.CornflowerBlue;
-                    b.FlatAppearance.BorderColor = Color.Black;
-                    break;
+                    activeBtn.BackColor = Color.CornflowerBlue;
+                    activeBtn.FlatAppearance.BorderColor = Color.Black;
                 }
             }
         }
     }
-
 }
+

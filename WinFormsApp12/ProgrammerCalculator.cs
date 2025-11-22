@@ -2,126 +2,52 @@
 
 namespace WinFormsApp12
 {
-    /// <summary>
-    /// Handles64-bit integer, multi-base, and bitwise operations
-    /// </summary>
-    public class ProgrammerCalculator
+
+
+    public enum ProgrammerOperation
     {
-        private long result =0;
-        private string currentOperator = "";
-        private long leftOperand =0;
+        None,
+        Add,
+        Subtract,
+        Multiply,
+        Divide,
+        And,
+        Or,
+        Xor,
+        LeftShift,
+        RightShift
+    }
 
-        private long lastRightOperand =0;
-        private string lastOperator = "";
-        private bool isNewChain = true;
 
-        public long Result => result;
-        public string CurrentOperator => currentOperator;
-        public long LeftOperand => leftOperand;
-
-        public long PerformUnaryOperation(string operatorSymbol, long value)
+    public class ProgrammerCalculator : BaseCalculator<long, ProgrammerOperation>
+    {
+        protected override long ApplyOperation(long left, long right, ProgrammerOperation op)
         {
-            switch (operatorSymbol)
+            return op switch
             {
-                case "~":
-                    return ~value;
-                default:
-                    return value;
-            }
+                ProgrammerOperation.Add => left + right,
+                ProgrammerOperation.Subtract => left - right,
+                ProgrammerOperation.Multiply => left * right,
+                ProgrammerOperation.Divide => right == 0 ? throw new DivideByZeroException() : left / right,
+                ProgrammerOperation.And => left & right,
+                ProgrammerOperation.Or => left | right,
+                ProgrammerOperation.Xor => left ^ right,
+                ProgrammerOperation.LeftShift => left << (int)right,
+                ProgrammerOperation.RightShift => left >> (int)right,
+
+                ProgrammerOperation.None => right,
+
+                _ => left
+            };
         }
 
-        private void PerformCalculation(long rightValue)
+        public long ApplyUnary(string op, long value)
         {
-            switch (currentOperator)
+            return op switch
             {
-                case "+":
-                    result += rightValue;
-                    break;
-                case "-":
-                    result -= rightValue;
-                    break;
-                case "*":
-                    result *= rightValue;
-                    break;
-                case "/":
-                    if (rightValue ==0)
-                    {
-                        throw new DivideByZeroException("Cannot divide by zero.");
-                    }
-                    result /= rightValue;
-                    break;
-                case "&":
-                    result &= rightValue;
-                    break;
-                case "|":
-                    result |= rightValue;
-                    break;
-                case "^":
-                    result ^= rightValue;
-                    break;
-                case "<<":
-                    result <<= (int)rightValue;
-                    break;
-                case ">>":
-                    result >>= (int)rightValue;
-                    break;
-                case "":
-                    result = rightValue;
-                    break;
-            }
-
-            lastRightOperand = rightValue;
-            lastOperator = currentOperator;
-            leftOperand = result;
-        }
-
-        public void SetOperator(string operatorSymbol, long currentValue)
-        {
-            if (!isNewChain)
-            {
-                PerformCalculation(currentValue);
-            }
-            else
-            {
-                result = currentValue;
-                leftOperand = currentValue;
-                isNewChain = false;
-            }
-
-            currentOperator = operatorSymbol;
-        }
-
-        public long CalculateFinal(long rightValue)
-        {
-            if (isNewChain)
-            {
-                if (!string.IsNullOrEmpty(lastOperator))
-                {
-                    currentOperator = lastOperator;
-                    PerformCalculation(lastRightOperand);
-                }
-                else
-                {
-                    result = rightValue;
-                }
-            }
-            else
-            {
-                PerformCalculation(rightValue);
-                isNewChain = true;
-            }
-
-            return result;
-        }
-
-        public void Reset()
-        {
-            result =0;
-            currentOperator = "";
-            leftOperand =0;
-            lastRightOperand =0;
-            lastOperator = "";
-            isNewChain = true;
+                "~" => ~value,
+                _ => value
+            };
         }
     }
 }
