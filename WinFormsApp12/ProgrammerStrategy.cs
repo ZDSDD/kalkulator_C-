@@ -24,72 +24,91 @@ namespace WinFormsApp12
 
         public void AppendNumber(string number) => _display.AppendNumber(number);
 
-        private ProgrammerOperation MapOperator(string op)
-        {
-            return op switch
-            {
-                "+" => ProgrammerOperation.Add,
-                "-" => ProgrammerOperation.Subtract,
-                "*" => ProgrammerOperation.Multiply,
-                "/" => ProgrammerOperation.Divide,
-                "&" => ProgrammerOperation.And,
-                "|" => ProgrammerOperation.Or,
-                "^" => ProgrammerOperation.Xor,
-                "<<" => ProgrammerOperation.LeftShift,
-                ">>" => ProgrammerOperation.RightShift,
-
-                "Lsh" => ProgrammerOperation.LeftShift,
-                "Rsh" => ProgrammerOperation.RightShift,
-                "AND" => ProgrammerOperation.And,
-                "OR" => ProgrammerOperation.Or,
-                "XOR" => ProgrammerOperation.Xor,
-
-                _ => ProgrammerOperation.None
-            };
-        }
-
         public void ApplyOperator(string op)
         {
             try
             {
                 long val = _display.GetCurrentInteger();
+                ProgrammerOperation operation = MapOperator(op);
 
-                _calc.ApplyOperator(val, MapOperator(op));
-                _display.ShowIntegerResult(_calc.LeftOperand);
+                _calc.ApplyOperator(val, operation);
+
+                // Show the result and operator
+                _display.ShowOperator(GetOperatorSymbol(operation), _calc.Result);
+                _display.ShowIntegerResult(_calc.Result);
             }
-            catch (Exception ex)
+            catch (DivideByZeroException)
             {
-                _display.ShowError(ex.Message);
+                _display.ShowError("Cannot divide by zero");
+                _calc.Reset();
+            }
+            catch (OverflowException)
+            {
+                _display.ShowError("Overflow");
+                _calc.Reset();
+            }
+            catch (Exception)
+            {
+                _display.ShowError("Error");
                 _calc.Reset();
             }
         }
 
         public void ApplyUnary(string op)
         {
-            if (op == "NOT") op = "~";
+            try
+            {
+                if (op == "NOT") op = "~";
 
-            long val = _display.GetCurrentInteger();
-            long res = _calc.ApplyUnary(op, val);
+                long val = _display.GetCurrentInteger();
+                long res = _calc.ApplyUnary(op, val);
 
-            _display.ShowIntegerResult(res);
+                _display.ShowIntegerResult(res);
+            }
+            catch (Exception)
+            {
+                _display.ShowError("Error");
+            }
         }
 
         public void CalculateResult()
         {
-            long right = _display.GetCurrentInteger();
-            long res = _calc.CalculateFinal(right);
+            try
+            {
+                long right = _display.GetCurrentInteger();
+                long left = _calc.LeftOperand;
+                string opSymbol = GetOperatorSymbol(_calc.CurrentOperator);
 
-            _display.ShowEqualsIntegerResult(
-                _calc.LeftOperand,
-                _calc.CurrentOperator.ToString(),
-                right, res);
+                long res = _calc.CalculateFinal(right);
+
+                _display.ShowEqualsIntegerResult(
+                    left,
+                    opSymbol,
+                    right,
+                    res
+                );
+            }
+            catch (DivideByZeroException)
+            {
+                _display.ShowError("Cannot divide by zero");
+                _calc.Reset();
+            }
+            catch (OverflowException)
+            {
+                _display.ShowError("Overflow");
+                _calc.Reset();
+            }
+            catch (Exception)
+            {
+                _display.ShowError("Error");
+                _calc.Reset();
+            }
         }
 
         public void Clear()
         {
             _calc.Reset();
             _display.Clear();
-            _display.ClearHistory();
         }
 
         public void ToggleSign() { }
@@ -111,6 +130,7 @@ namespace WinFormsApp12
             _display.CurrentBase = _currentBase;
             _display.ShowIntegerResult(val);
         }
+
         public bool IsDigitAllowed(string text)
         {
             if (_currentBase == NumberBase.Hexadecimal)
@@ -122,6 +142,40 @@ namespace WinFormsApp12
                 NumberBase.Octal => "01234567".Contains(text),
                 NumberBase.Binary => "01".Contains(text),
                 _ => false
+            };
+        }
+
+        private ProgrammerOperation MapOperator(string op)
+        {
+            return op switch
+            {
+                "+" => ProgrammerOperation.Add,
+                "-" => ProgrammerOperation.Subtract,
+                "*" => ProgrammerOperation.Multiply,
+                "/" => ProgrammerOperation.Divide,
+                "&" or "AND" => ProgrammerOperation.And,
+                "|" or "OR" => ProgrammerOperation.Or,
+                "^" or "XOR" => ProgrammerOperation.Xor,
+                "<<" or "Lsh" => ProgrammerOperation.LeftShift,
+                ">>" or "Rsh" => ProgrammerOperation.RightShift,
+                _ => ProgrammerOperation.None
+            };
+        }
+
+        private string GetOperatorSymbol(ProgrammerOperation op)
+        {
+            return op switch
+            {
+                ProgrammerOperation.Add => "+",
+                ProgrammerOperation.Subtract => "-",
+                ProgrammerOperation.Multiply => "×",
+                ProgrammerOperation.Divide => "÷",
+                ProgrammerOperation.And => "AND",
+                ProgrammerOperation.Or => "OR",
+                ProgrammerOperation.Xor => "XOR",
+                ProgrammerOperation.LeftShift => "Lsh",
+                ProgrammerOperation.RightShift => "Rsh",
+                _ => ""
             };
         }
     }

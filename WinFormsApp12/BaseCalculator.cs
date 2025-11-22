@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WinFormsApp12
 {
@@ -27,39 +23,44 @@ namespace WinFormsApp12
         {
             if (hasPendingOperator)
             {
-                result = ApplyOperation(result, currentValue, currentOperator);
+                // Complete the pending operation first
+                result = ApplyOperation(leftOperand, currentValue, currentOperator);
+                leftOperand = result;
             }
             else
             {
+                // Start new calculation
                 result = currentValue;
+                leftOperand = currentValue;
                 hasPendingOperator = true;
             }
 
-            leftOperand = result;
             currentOperator = op;
-
             lastOperator = op;
             lastRightOperand = currentValue;
         }
 
         public T CalculateFinal(T rightValue)
         {
-            if (!hasPendingOperator)
+            if (hasPendingOperator)
             {
+                // Complete pending calculation
+                result = ApplyOperation(leftOperand, rightValue, currentOperator);
+                leftOperand = result;
+                hasPendingOperator = false;
+
+                lastRightOperand = rightValue;
+                lastOperator = currentOperator;
+            }
+            else
+            {
+                // Repeat last operation (when pressing = multiple times)
                 if (lastOperator is not null)
                 {
+                    leftOperand = result;
                     result = ApplyOperation(result, lastRightOperand, lastOperator);
                 }
-                return result;
             }
-
-            result = ApplyOperation(result, rightValue, currentOperator);
-            leftOperand = result;
-
-            hasPendingOperator = false;
-
-            lastRightOperand = rightValue;
-            lastOperator = currentOperator;
 
             return result;
         }

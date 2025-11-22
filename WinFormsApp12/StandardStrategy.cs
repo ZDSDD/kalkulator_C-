@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WinFormsApp12
 {
@@ -27,15 +23,20 @@ namespace WinFormsApp12
             try
             {
                 double currentValue = _display.GetCurrentValue();
-
                 _calc.ApplyOperator(currentValue, OperatorStringToStandardOperation(op));
 
-                _display.ShowOperator(op, _calc.LeftOperand);
+                // Show the result after operation and the operator in equation label
+                _display.ShowOperator(GetOperatorSymbol(op), _calc.Result);
                 _display.ShowResult(_calc.Result);
+            }
+            catch (DivideByZeroException)
+            {
+                _display.ShowError("Cannot divide by zero");
+                _calc.Reset();
             }
             catch (Exception ex)
             {
-                _display.ShowError(ex.Message);
+                _display.ShowError("Error");
                 _calc.Reset();
             }
         }
@@ -56,57 +57,45 @@ namespace WinFormsApp12
 
                 _display.ShowResult(unary);
             }
-            catch (Exception ex)
+            catch (DivideByZeroException)
             {
-                _display.ShowError(ex.Message);
-                _calc.Reset();
+                _display.ShowError("Cannot divide by zero");
+            }
+            catch (ArgumentException)
+            {
+                _display.ShowError("Invalid input");
+            }
+            catch (Exception)
+            {
+                _display.ShowError("Error");
             }
         }
-        public string CurrentOperatorString(StandardOperation standardOperation)
-        {
-            return standardOperation switch
-            {
-                StandardOperation.Add => "+",
-                StandardOperation.Subtract => "-",
-                StandardOperation.Multiply => "×",
-                StandardOperation.Divide => "÷",
-                StandardOperation.None => "",
-                _ => ""
-            };
-        }
-        public string CurrentOperatorString()
-        {
-            return CurrentOperatorString(_calc.CurrentOperator);
-        }
 
-        public StandardOperation OperatorStringToStandardOperation(string op)
-        {
-            return op switch
-            {
-                "+" => StandardOperation.Add,
-                "-" => StandardOperation.Subtract,
-                "×" => StandardOperation.Multiply,
-                "÷" => StandardOperation.Divide,
-                _ => StandardOperation.None
-            };
-        }
         public void CalculateResult()
         {
             try
             {
                 double right = _display.GetCurrentValue();
+                double left = _calc.LeftOperand;
+                string opSymbol = CurrentOperatorString();
+
                 double res = _calc.CalculateFinal(right);
 
                 _display.ShowEqualsResult(
-                    _calc.LeftOperand,
-                    CurrentOperatorString(),
+                    left,
+                    opSymbol,
                     right,
                     res
                 );
             }
-            catch (Exception ex)
+            catch (DivideByZeroException)
             {
-                _display.ShowError(ex.Message);
+                _display.ShowError("Cannot divide by zero");
+                _calc.Reset();
+            }
+            catch (Exception)
+            {
+                _display.ShowError("Error");
                 _calc.Reset();
             }
         }
@@ -115,14 +104,46 @@ namespace WinFormsApp12
         {
             _calc.Reset();
             _display.Clear();
-            _display.ClearHistory();
         }
 
         public void ToggleSign() => _display.ToggleSign();
         public void AppendDecimal() => _display.AppendDecimal();
         public void ChangeBase(string b) { }
         public bool IsDigitAllowed(string text) => true;
+
+        // Convert operator symbol to display symbol
+        private string GetOperatorSymbol(string op)
+        {
+            return op switch
+            {
+                "*" => "×",
+                "/" => "÷",
+                _ => op
+            };
+        }
+
+        private string CurrentOperatorString()
+        {
+            return _calc.CurrentOperator switch
+            {
+                StandardOperation.Add => "+",
+                StandardOperation.Subtract => "-",
+                StandardOperation.Multiply => "×",
+                StandardOperation.Divide => "÷",
+                _ => ""
+            };
+        }
+
+        private StandardOperation OperatorStringToStandardOperation(string op)
+        {
+            return op switch
+            {
+                "+" => StandardOperation.Add,
+                "-" => StandardOperation.Subtract,
+                "*" or "×" => StandardOperation.Multiply,
+                "/" or "÷" => StandardOperation.Divide,
+                _ => StandardOperation.None
+            };
+        }
     }
-
-
 }
