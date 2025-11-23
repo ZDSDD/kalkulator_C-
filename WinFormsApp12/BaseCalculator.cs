@@ -17,6 +17,9 @@ namespace CalculatorApp
         public TOp CurrentOperator => currentOperator;
         public T LeftOperand => leftOperand;
         public T LastRightOperand => lastRightOperand;
+
+        public bool HasPendingOperator => hasPendingOperator;
+
         protected abstract T ApplyOperation(T left, T right, TOp op);
 
         public void ApplyOperator(T currentValue, TOp op)
@@ -36,7 +39,6 @@ namespace CalculatorApp
         {
             if (hasPendingOperator)
             {
-                // Complete pending calculation
                 result = ApplyOperation(leftOperand, rightValue, currentOperator);
                 leftOperand = result;
                 hasPendingOperator = false;
@@ -46,11 +48,10 @@ namespace CalculatorApp
             }
             else
             {
-                // Repeat last operation (when pressing = multiple times)
                 if (lastOperator is not null)
                 {
-                    leftOperand = result;
-                    result = ApplyOperation(result, lastRightOperand, lastOperator);
+                    leftOperand = rightValue;
+                    result = ApplyOperation(rightValue, lastRightOperand, lastOperator);
                 }
             }
 

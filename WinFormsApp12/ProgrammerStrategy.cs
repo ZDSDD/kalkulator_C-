@@ -34,7 +34,6 @@ namespace CalculatorApp
 
                 _calc.ApplyOperator(val, operation);
 
-                // Show the result and operator
                 _display.ShowOperator(GetOperatorSymbol(operation), _calc.Result);
                 _display.ShowIntegerResult(_calc.Result);
             }
@@ -77,21 +76,35 @@ namespace CalculatorApp
             try
             {
                 long right = _display.GetCurrentInteger();
-                long left = _calc.LeftOperand;
+
+                long displayLeft;
+                long displayRight;
+
+                if (_calc.HasPendingOperator)
+                {
+                    displayLeft = _calc.LeftOperand;
+                    displayRight = right;
+                }
+                else
+                {
+                    displayLeft = right;
+                    displayRight = _calc.LastRightOperand;
+                }
+
                 string opSymbol = GetOperatorSymbol(_calc.CurrentOperator);
                 if (opSymbol == "")
                 {
-                    // No operation to perform
                     _display.ShowExactlyOnDisplay($"{right}=", right.ToString(CultureInfo.CurrentCulture), right.ToString(CultureInfo.CurrentCulture));
                     _display.ShowResult(right);
                     return;
                 }
+
                 long res = _calc.CalculateFinal(right);
 
                 _display.ShowEqualsIntegerResult(
-                    left,
+                    displayLeft,
                     opSymbol,
-                    _calc.LastRightOperand,
+                    displayRight,
                     res
                 );
             }

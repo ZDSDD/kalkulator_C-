@@ -27,8 +27,6 @@ namespace CalculatorApp
             {
                 double currentValue = _display.GetCurrentValue();
                 _calc.ApplyOperator(currentValue, OperatorStringToStandardOperation(op));
-
-                // Show the result after operation and the operator in equation label
                 _display.ShowOperator(GetOperatorSymbol(op), _calc.Result);
                 _display.ShowResult(_calc.Result);
             }
@@ -87,21 +85,35 @@ namespace CalculatorApp
             try
             {
                 double right = _display.GetCurrentValue();
-                double left = _calc.LeftOperand;
+
+                double displayLeft;
+                double displayRight;
+
+                if (_calc.HasPendingOperator)
+                {
+                    displayLeft = _calc.LeftOperand;
+                    displayRight = right;
+                }
+                else
+                {
+                    displayLeft = right;
+                    displayRight = _calc.LastRightOperand;
+                }
+
                 string opSymbol = CurrentOperatorString();
                 if (opSymbol == "")
                 {
-                    // No operation to perform
                     _display.ShowExactlyOnDisplay($"{right}=", right.ToString(CultureInfo.CurrentCulture), right.ToString(CultureInfo.CurrentCulture));
                     _display.ShowResult(right);
                     return;
                 }
+
                 double res = _calc.CalculateFinal(right);
 
                 _display.ShowEqualsResult(
-                    left,
+                    displayLeft,
                     opSymbol,
-                    _calc.LastRightOperand,
+                    displayRight,
                     res
                 );
             }
